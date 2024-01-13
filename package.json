@@ -1,0 +1,27 @@
+{
+  "name": "dify-discord-starter",
+  "version": "0.0.1",
+  "description": "A starter project to create discord bots with dify apps.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "install-cmd": "ts-node scripts/install.ts",
+    "dev": "nodemon"
+  },
+  "author": "Pascal Malbranche",
+  "license": "MIT",
+  "dependencies": {
+    "@discordjs/builders": "^1.7.0",
+    "@discordjs/rest": "^2.2.0",
+    "axios": "^1.6.5",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "nodemon": "^3.0.2",
+    "ts-node": "^10.9.2"
+  }
+}
