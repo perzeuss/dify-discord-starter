@@ -6,13 +6,16 @@ import DifyChatClient from './dify-client';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
+const conversationCache = new Map<string, string>()
 
 class DiscordBot {
     private client: Client;
     private difyClient: DifyChatClient;
     private readonly TOKEN: string;
+    private readonly CACHE_MODE: string;
     constructor() {
         this.TOKEN = process.env.DISCORD_BOT_TOKEN || '';
+        this.CACHE_MODE = process.env.CACHE_MODE || '';
         if (!this.TOKEN) {
             throw new Error('DISCORD_BOT_TOKEN must be provided in the .env file');
         }
@@ -82,9 +85,15 @@ class DiscordBot {
         await interaction.deferReply({ ephemeral: true });
 
         const message = interaction.options.get('message', true);
+        const cacheId = this.CACHE_MODE && this.CACHE_MODE === 'user' ? interaction.user.id : interaction.channelId;
 
         try {
-            const difyResponse = await this.difyClient.createChatMessage({ inputs: {}, query: message.value! as string, response_mode: 'blocking', conversation_id: '', user: interaction.user.id });
+            const difyResponse = await this.difyClient.createChatMessage({ inputs: { username: interaction.user.globalName || interaction.user.username }, query: message.value! as string, response_mode: 'blocking', conversation_id: cacheId && conversationCache.get(cacheId) || '', user: interaction.user.id });
+
+            if (cacheId) {
+                conversationCache.set(cacheId, difyResponse.conversation_id);
+            }
+
             await interaction.editReply({ content: difyResponse.answer });
         } catch (error) {
             console.error('Error sending message to Dify:', error);
@@ -93,8 +102,15 @@ class DiscordBot {
     }
 
     private async handleChatMessage(message: Message) {
+        const cacheId = this.CACHE_MODE && this.CACHE_MODE === 'user' ? message.author.id : message.channelId;
+
         try {
-            const difyResponse = await this.difyClient.createChatMessage({ inputs: {}, query: message.content, response_mode: 'blocking', conversation_id: '', user: message.author.id });
+            const difyResponse = await this.difyClient.createChatMessage({ inputs: { username: message.author.globalName || message.author.username }, query: message.content, response_mode: 'blocking', conversation_id: cacheId && conversationCache.get(cacheId) || '', user: message.author.id });
+
+            if (cacheId) {
+                conversationCache.set(cacheId, difyResponse.conversation_id);
+            }
+
             await message.reply(difyResponse.answer);
         } catch (error) {
             console.error('Error sending message to Dify:', error);

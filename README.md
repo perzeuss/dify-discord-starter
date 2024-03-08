@@ -68,6 +68,22 @@ Once the bot is added to your server and the slash command is installed, you can
 - `npm run dev`: Runs the bot in development mode with hot reloading, ideal for development purposes.
 - `npm run install-cmd`: A shortcut script to run the install command script.
 
+## Dify variables
+By default the discord bot will pass the name of the user to the bot, within the dify variable `username`.
+
+## Conversation History
+You can set the environment variable `HISTORY_MODE` to enable chat history. Currently the history is stored in memory, if you restart the bot, it will forget the history.
+Be aware that currently, there is no mechanic to clear or summarize the history. This means, that if users send too many messages, you might reach the token limit of the assistant.
+
+If you do not set this variable, the bot will not remember messages - the bot will even forget the last message the bot has sent to the channel.
+
+### History per user
+Set it to `user` if you want the bot to enable an own chat history for every user. The assistant will remember every message of the user accross channels and servers.
+
+### History per channel
+Set it to `channel` if you want the bot to enable a history for channels. The assistant will remember every message in the channe regardless from which user it came. You should use the dify variable "username" to allow the bot recognize the author of messages, otherwise the assistant will think all messages come from the same user.
+
+
 ## Contributing 🤝
 
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
