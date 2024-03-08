@@ -64,10 +64,10 @@ class DiscordBot {
         const commands = [
             new SlashCommandBuilder()
                 .setName('chat')
-                .setDescription('Chat with the bot')
+                .setDescription('Chat with the bot in private. No one but you will see this messasge or the bot response.')
                 .addStringOption(option =>
                     option.setName('message')
-                        .setDescription('Your message')
+                        .setDescription('Your message.')
                         .setRequired(true))
                 .toJSON(),
             new SlashCommandBuilder()
@@ -114,7 +114,7 @@ class DiscordBot {
                 if (index === 0) {
                     await interaction.editReply({ content: m });
                 } else {
-                    await interaction.followUp({ content: m });
+                    await interaction.followUp({ content: m, ephemeral: true});
                 }
             }
         } catch (error) {
