@@ -1,4 +1,4 @@
-import { Client, IntentsBitField, CommandInteraction } from 'discord.js';
+import { Client, IntentsBitField, CommandInteraction, type Message } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { SlashCommandBuilder } from '@discordjs/builders';
@@ -11,20 +11,32 @@ class DiscordBot {
     private client: Client;
     private difyClient: DifyChatClient;
     private readonly TOKEN: string;
-
     constructor() {
         this.TOKEN = process.env.DISCORD_BOT_TOKEN || '';
         if (!this.TOKEN) {
             throw new Error('DISCORD_BOT_TOKEN must be provided in the .env file');
         }
 
-        this.client = new Client({ intents: [IntentsBitField.Flags.Guilds] });
+        this.client = new Client({
+            intents: [
+                IntentsBitField.Flags.Guilds,
+                IntentsBitField.Flags.GuildMessages,
+                IntentsBitField.Flags.DirectMessages
+            ]
+        });
         this.difyClient = new DifyChatClient();
 
         this.client.once('ready', () => {
             console.log('Discord bot is ready!', 'Client ID:', this.client.user!.id, `\nInstall this bot to your server with this link: https://discord.com/api/oauth2/authorize?client_id=${this.client.user!.id}&permissions=0&scope=bot%20applications.commands `);
         });
 
+        this.client.on('messageCreate', async (message) => {
+            if (message.author.bot) return;
+
+            if (message.mentions.has(this.client.user!.id)) {
+                await this.handleChatMessage(message);
+            }
+        });
         this.client.on('interactionCreate', async (interaction) => {
             if (!interaction.isCommand()) return;
 
@@ -76,7 +88,17 @@ class DiscordBot {
             await interaction.editReply({ content: difyResponse.answer });
         } catch (error) {
             console.error('Error sending message to Dify:', error);
-            await interaction.editReply({ content: 'Sorry, something went wrong while processing your request.' });
+            await interaction.editReply({ content: 'Sorry, something went wrong while generating the answer.' });
+        }
+    }
+
+    private async handleChatMessage(message: Message) {
+        try {
+            const difyResponse = await this.difyClient.createChatMessage({ inputs: {}, query: message.content, response_mode: 'blocking', conversation_id: '', user: message.author.id });
+            await message.reply(difyResponse.answer);
+        } catch (error) {
+            console.error('Error sending message to Dify:', error);
+            await message.reply('Sorry, something went wrong while generating the answer.');
         }
     }
 }
