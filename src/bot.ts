@@ -13,9 +13,12 @@ class DiscordBot {
     private difyClient: DifyChatClient;
     private readonly TOKEN: string;
     private readonly CACHE_MODE: string;
+    private readonly MAX_MESSAGE_LENGTH: number;
+
     constructor() {
         this.TOKEN = process.env.DISCORD_BOT_TOKEN || '';
         this.CACHE_MODE = process.env.CACHE_MODE || '';
+        this.MAX_MESSAGE_LENGTH = Number(process.env.MAX_MESSAGE_LENGTH) || 2000;
         if (!this.TOKEN) {
             throw new Error('DISCORD_BOT_TOKEN must be provided in the .env file');
         }
@@ -94,7 +97,14 @@ class DiscordBot {
                 conversationCache.set(cacheId, difyResponse.conversation_id);
             }
 
-            await interaction.editReply({ content: difyResponse.answer });
+            const messages = this.splitMessage(difyResponse.answer, { maxLength: this.MAX_MESSAGE_LENGTH });
+            for (const [index, m] of messages.entries()) {
+                if (index === 0) {
+                    await interaction.editReply({ content: m });
+                } else {
+                    await interaction.followUp({ content: m });
+                }
+            }
         } catch (error) {
             console.error('Error sending message to Dify:', error);
             await interaction.editReply({ content: 'Sorry, something went wrong while generating the answer.' });
@@ -112,11 +122,30 @@ class DiscordBot {
                 conversationCache.set(cacheId, difyResponse.conversation_id);
             }
 
-            await message.reply(difyResponse.answer);
+            const messages = this.splitMessage(difyResponse.answer, { maxLength: this.MAX_MESSAGE_LENGTH });
+            for (const m of messages) {
+                await message.reply(m);
+            }
         } catch (error) {
             console.error('Error sending message to Dify:', error);
             await message.reply('Sorry, something went wrong while generating the answer.');
         }
+    }
+
+    splitMessage(message: string, options: { maxLength?: number, char?: string, prepend?: string, append?: string } = {}): string[] {
+        const { maxLength = 2000, char = '\n', prepend = '', append = '' } = options;
+        if (message.length <= maxLength) return [message];
+        const splitText = message.split(char);
+        if (splitText.some(part => part.length > maxLength)) throw new RangeError('SPLIT_MAX_LEN');
+        const messages = [''];
+        for (let part of splitText) {
+            if (messages[messages.length - 1].length + part.length + 1 > maxLength) {
+                messages[messages.length - 1] += append;
+                messages.push(prepend);
+            }
+            messages[messages.length - 1] += (messages[messages.length - 1].length > 0 && messages[messages.length - 1] !== prepend ? char : '') + part;
+        }
+        return messages;
     }
 }
 
