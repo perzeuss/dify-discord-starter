@@ -105,6 +105,7 @@ class DiscordBot {
         const cacheId = this.CACHE_MODE && this.CACHE_MODE === 'user' ? message.author.id : message.channelId;
 
         try {
+            message.channel.sendTyping().catch(console.error);
             const difyResponse = await this.difyClient.createChatMessage({ inputs: { username: message.author.globalName || message.author.username }, query: message.content.replace(`<@${this.client.user?.id}>`, ''), response_mode: 'blocking', conversation_id: cacheId && conversationCache.get(cacheId) || '', user: message.author.id });
 
             if (cacheId) {
