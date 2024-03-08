@@ -48,6 +48,10 @@ class DiscordBot {
 
             if (interaction.commandName === 'chat') {
                 await this.handleChatCommand(interaction);
+            } else if (interaction.commandName === 'new-conversation') {
+                const cacheId = this.CACHE_MODE && this.CACHE_MODE === 'user' ? interaction.user.id : interaction.channelId;
+                conversationCache.delete(cacheId);
+                await interaction.reply('New conversation started!');
             }
         });
     }
@@ -65,6 +69,14 @@ class DiscordBot {
                     option.setName('message')
                         .setDescription('Your message')
                         .setRequired(true))
+                .toJSON(),
+            new SlashCommandBuilder()
+                .setName('new-conversation')
+                .setDescription('Start a new conversation with the bot. This will clear the chat history.')
+                // .addStringOption(option =>
+                //     option.setName('summarize')
+                //         .setDescription('Summarize the current conversation history and take it over to the new conversation.')
+                //         .setRequired(true))
                 .toJSON(),
         ];
 
