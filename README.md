@@ -83,6 +83,8 @@ Set it to `user` if you want the bot to enable an own chat history for every use
 ### History per channel
 Set it to `channel` if you want the bot to enable a history for channels. The assistant will remember every message in the channe regardless from which user it came. You should use the dify variable "username" to allow the bot recognize the author of messages, otherwise the assistant will think all messages come from the same user.
 
+Hint: If you use this, the userId of messages will no longer be the user but the server id, since dify does store conversations per user - if you share conversations accross users, you cannot pass the userid since dify would still create a unique conversation per user.
+
 
 ## Contributing 🤝
 

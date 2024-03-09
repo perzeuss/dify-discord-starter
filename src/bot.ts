@@ -12,12 +12,12 @@ class DiscordBot {
     private client: Client;
     private difyClient: DifyChatClient;
     private readonly TOKEN: string;
-    private readonly CACHE_MODE: string;
+    private readonly HISTORY_MODE: string;
     private readonly MAX_MESSAGE_LENGTH: number;
 
     constructor() {
         this.TOKEN = process.env.DISCORD_BOT_TOKEN || '';
-        this.CACHE_MODE = process.env.CACHE_MODE || '';
+        this.HISTORY_MODE = process.env.HISTORY_MODE || '';
         this.MAX_MESSAGE_LENGTH = Number(process.env.MAX_MESSAGE_LENGTH) || 2000;
         if (!this.TOKEN) {
             throw new Error('DISCORD_BOT_TOKEN must be provided in the .env file');
@@ -49,7 +49,7 @@ class DiscordBot {
             if (interaction.commandName === 'chat') {
                 await this.handleChatCommand(interaction);
             } else if (interaction.commandName === 'new-conversation') {
-                const cacheId = this.CACHE_MODE && this.CACHE_MODE === 'user' ? interaction.user.id : interaction.channelId;
+                const cacheId = this.HISTORY_MODE && this.HISTORY_MODE === 'user' ? interaction.user.id : interaction.channelId;
                 conversationCache.delete(cacheId);
                 await interaction.reply('New conversation started!');
             }
@@ -100,13 +100,13 @@ class DiscordBot {
         await interaction.deferReply({ ephemeral: true });
 
         const message = interaction.options.get('message', true);
-        const cacheId = this.CACHE_MODE && this.CACHE_MODE === 'user' ? interaction.user.id : interaction.channelId;
+        const cacheKey = this.getCacheKey(interaction.user.id, interaction.channel?.id);
 
         try {
-            const difyResponse = await this.difyClient.createChatMessage({ inputs: { username: interaction.user.globalName || interaction.user.username }, query: message.value! as string, response_mode: 'blocking', conversation_id: cacheId && conversationCache.get(cacheId) || '', user: interaction.user.id });
+            const difyResponse = await this.difyClient.createChatMessage({ inputs: { username: interaction.user.globalName || interaction.user.username }, query: message.value! as string, response_mode: 'blocking', conversation_id: cacheKey && conversationCache.get(cacheKey) || '', user: this.getUserId(interaction.user.id, interaction.guild?.id) });
 
-            if (cacheId) {
-                conversationCache.set(cacheId, difyResponse.conversation_id);
+            if (cacheKey) {
+                conversationCache.set(cacheKey, difyResponse.conversation_id);
             }
 
             const messages = this.splitMessage(difyResponse.answer, { maxLength: this.MAX_MESSAGE_LENGTH });
@@ -114,7 +114,7 @@ class DiscordBot {
                 if (index === 0) {
                     await interaction.editReply({ content: m });
                 } else {
-                    await interaction.followUp({ content: m, ephemeral: true});
+                    await interaction.followUp({ content: m, ephemeral: true });
                 }
             }
         } catch (error) {
@@ -124,23 +124,45 @@ class DiscordBot {
     }
 
     private async handleChatMessage(message: Message) {
-        const cacheId = this.CACHE_MODE && this.CACHE_MODE === 'user' ? message.author.id : message.channelId;
+        const cacheKey = this.getCacheKey(message.author.id, message.channelId);
 
         try {
             message.channel.sendTyping().catch(console.error);
-            const difyResponse = await this.difyClient.createChatMessage({ inputs: { username: message.author.globalName || message.author.username }, query: message.content.replace(`<@${this.client.user?.id}>`, ''), response_mode: 'blocking', conversation_id: cacheId && conversationCache.get(cacheId) || '', user: message.author.id });
+            const difyResponse = await this.difyClient.createChatMessage({ inputs: { username: message.author.globalName || message.author.username }, query: message.content.replace(`<@${this.client.user?.id}>`, ''), response_mode: 'blocking', conversation_id: cacheKey && conversationCache.get(cacheKey) || '', user: this.getUserId(message.author.id, message.guild?.id) });
 
-            if (cacheId) {
-                conversationCache.set(cacheId, difyResponse.conversation_id);
+            if (cacheKey) {
+                conversationCache.set(cacheKey, difyResponse.conversation_id);
             }
 
             const messages = this.splitMessage(difyResponse.answer, { maxLength: this.MAX_MESSAGE_LENGTH });
             for (const m of messages) {
                 await message.reply(m);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error sending message to Dify:', error);
             await message.reply('Sorry, something went wrong while generating the answer.');
+        }
+    }
+
+    private getCacheKey(userId: string | undefined, channelId: string | undefined) {
+        switch (this.HISTORY_MODE) {
+            case 'user':
+                return userId || ''
+            case 'channel':
+                return channelId || ''
+            default:
+                return ''
+        }
+    }
+
+    private getUserId(userId: string | undefined, serverId: string | undefined) {
+        switch (this.HISTORY_MODE) {
+            case 'user':
+                return userId || ''
+            case 'channel':
+                return serverId || ''
+            default:
+                return ''
         }
     }
 
