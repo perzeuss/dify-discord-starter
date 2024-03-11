@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.3](https://github.com/perzeuss/dify-discord-starter/compare/v0.0.2...v0.0.3) (2024-03-11)
+
+
+### Features
+
+* pass current time to assistant ([a89a09e](https://github.com/perzeuss/dify-discord-starter/commit/a89a09e45e4c8920e0ea228e53070fe87c86f3fd))
+
+
+### Bug Fixes
+
+* uncomplete stream memssages caused error log ([051612d](https://github.com/perzeuss/dify-discord-starter/commit/051612d77a5d2cb13ab73ac9b7e6dca7ef816374))
+
 ### [0.0.2](https://github.com/perzeuss/dify-discord-starter/compare/v0.0.1...v0.0.2) (2024-03-11)
 
 
