@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "install-cmd": "ts-node scripts/install.ts",
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "release": "standard-version"
   },
   "author": "Pascal Malbranche",
   "license": "MIT",
@@ -17,11 +18,13 @@
     "axios": "^1.6.5",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
+    "standard-version": "^9.5.0",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "nodemon": "^3.0.2",
+    "prettier": "3.2.5",
     "ts-node": "^10.9.2"
   }
 }
