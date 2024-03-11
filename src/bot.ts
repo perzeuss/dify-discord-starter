@@ -132,6 +132,7 @@ class DiscordBot {
         {
           inputs: {
             username: interaction.user.globalName || interaction.user.username,
+            now: new Date().toUTCString(),
           },
           query: message.value! as string,
           response_mode: "streaming",
@@ -172,6 +173,7 @@ class DiscordBot {
         {
           inputs: {
             username: message.author.globalName || message.author.username,
+            now: new Date().toUTCString(),
           },
           query: message.content.replace(`<@${this.client.user?.id}>`, ""),
           response_mode: "streaming",

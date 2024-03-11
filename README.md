@@ -78,7 +78,8 @@ Once the bot is added to your server and the slash command is installed, you can
 
 ## Dify variables
 
-By default the discord bot will pass the name of the user to the bot, within the dify variable `username`.
+By default the discord bot will pass the name of the user to the assistant, within the dify variable `username` and the current date as UTC string within the dify variable `now`.
+
 
 ## Conversation History
 
