@@ -1,6 +1,6 @@
 {
   "name": "dify-discord-starter",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A starter project to create discord bots with dify apps.",
   "main": "dist/index.js",
   "scripts": {
