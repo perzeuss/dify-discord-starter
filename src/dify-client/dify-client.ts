@@ -39,7 +39,7 @@ class DifyChatClient {
 
     if (!apiKey || !apiBaseUrl) {
       throw new Error(
-        "API_KEY and API_BASE_URL must be provided in the .env file",
+        "API_KEY and API_BASE_URL must be provided in the .env file"
       );
     }
 
@@ -67,7 +67,7 @@ class DifyChatClient {
       onError,
       getAbortController,
       onPing,
-    }: IOtherOptions & { onPing?: () => void },
+    }: IOtherOptions & { onPing?: () => void }
   ) {
     const abortController = new AbortController();
     const baseOptions = {
@@ -87,7 +87,7 @@ class DifyChatClient {
         method: "POST",
         signal: abortController.signal,
       },
-      fetchOptions,
+      fetchOptions
     );
 
     const contentType = options.headers.get("Content-Type");
@@ -132,7 +132,7 @@ class DifyChatClient {
           onMessageEnd,
           onMessageReplace,
           onFile,
-          onPing,
+          onPing
         );
       })
       .catch((e) => {
@@ -150,7 +150,7 @@ class DifyChatClient {
     onMessageEnd?: IOnMessageEnd,
     onMessageReplace?: IOnMessageReplace,
     onFile?: IOnFile,
-    onPing?: () => void,
+    onPing?: () => void
   ) {
     if (!response.ok) {
       throw new Error("Network response was not ok");
@@ -187,7 +187,7 @@ class DifyChatClient {
                 bufferObj = JSON.parse(message) as Record<string, any>;
               }
             } catch (e) {
-              console.error("unexpected message content.", e);
+              // line is not yet complete; buffer it and wait for the next chunk
               onData("", isFirstMessage, {
                 conversationId: bufferObj?.conversation_id,
                 messageId: bufferObj?.message_id,
@@ -256,13 +256,13 @@ class DifyChatClient {
       onMessage: (
         text: string,
         isFirstMessage: boolean,
-        { conversationId }: { conversationId: string },
+        { conversationId }: { conversationId: string }
       ) => void;
       onCompleted?: () => void;
       onFile?: (file: VisionFile) => void;
       onPing?: () => void;
       onThought?: IOnThought;
-    },
+    }
   ): Promise<void> {
     this.ssePost(
       `${this.API_BASE_URL}/chat-messages`,
@@ -287,38 +287,38 @@ class DifyChatClient {
         onFile,
         onPing,
         onThought,
-      },
+      }
     );
   }
 
   public async sendFeedback(
     message_id: string,
-    request: FeedbackRequest,
+    request: FeedbackRequest
   ): Promise<FeedbackResponse> {
     const response = await this.axiosInstance.post<FeedbackResponse>(
       `/messages/${message_id}/feedbacks`,
-      request,
+      request
     );
     return response.data;
   }
 
   public async getSuggestedQuestions(
-    message_id: string,
+    message_id: string
   ): Promise<SuggestedQuestionsResponse> {
     const response = await this.axiosInstance.get<SuggestedQuestionsResponse>(
-      `/messages/${message_id}/suggested`,
+      `/messages/${message_id}/suggested`
     );
     return response.data;
   }
 
   public async getChatHistory(
-    request: ChatHistoryRequest,
+    request: ChatHistoryRequest
   ): Promise<ChatHistoryResponse> {
     const response = await this.axiosInstance.get<ChatHistoryResponse>(
       "/messages",
       {
         params: request,
-      },
+      }
     );
     return response.data;
   }
@@ -326,35 +326,35 @@ class DifyChatClient {
   public async getConversationList(
     user: string,
     last_id?: string,
-    limit: number = 20,
+    limit: number = 20
   ): Promise<ConversationListResponse> {
     const response = await this.axiosInstance.get<ConversationListResponse>(
       "/conversations",
       {
         params: { user, last_id, limit },
-      },
+      }
     );
     return response.data;
   }
 
   public async renameConversation(
     conversation_id: string,
-    request: ConversationNameRequest,
+    request: ConversationNameRequest
   ): Promise<{ result: string }> {
     const response = await this.axiosInstance.post<{ result: string }>(
       `/conversations/${conversation_id}/name`,
-      request,
+      request
     );
     return response.data;
   }
 
   public async deleteConversation(
     conversation_id: string,
-    request: DeleteConversationRequest,
+    request: DeleteConversationRequest
   ): Promise<{ result: string }> {
     const response = await this.axiosInstance.delete<{ result: string }>(
       `/conversations/${conversation_id}`,
-      { data: request },
+      { data: request }
     );
     return response.data;
   }
@@ -364,7 +364,7 @@ class DifyChatClient {
       "/parameters",
       {
         params: { user },
-      },
+      }
     );
     return response.data;
   }
