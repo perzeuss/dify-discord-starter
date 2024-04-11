@@ -36,7 +36,7 @@ export type VisionFile = {
 
 export type ThoughtItem = {
   id: string;
-  tool: string; // plugin or dataset. May has multi.
+  tool: string;
   thought: string;
   tool_input: string;
   message_id: string;
@@ -130,6 +130,78 @@ export type MessageReplace = {
   conversation_id: string;
 };
 
+export type WorkflowStarted = {
+  task_id: string;
+  workflow_run_id: string;
+  event: string;
+  data: {
+    id: string;
+    workflow_id: string;
+    sequence_number: number;
+    created_at: number;
+  };
+};
+
+export type WorkflowFinished = {
+  task_id: string;
+  workflow_run_id: string;
+  event: string;
+  data: {
+    id: string;
+    workflow_id: string;
+    status: string;
+    outputs?: any;
+    error?: string;
+    elapsed_time?: number;
+    total_tokens?: number;
+    total_steps: number;
+    created_at: number;
+    finished_at: number;
+  };
+};
+
+export type NodeStarted = {
+  task_id: string;
+  workflow_run_id: string;
+  event: string;
+  data: {
+    id: string;
+    node_id: string;
+    node_type: string;
+    title: string;
+    index: number;
+    predecessor_node_id?: string;
+    inputs: any[];
+    created_at: number;
+  };
+};
+
+export type NodeFinished = {
+  task_id: string;
+  workflow_run_id: string;
+  event: string;
+  data: {
+    id: string;
+    node_id: string;
+    node_type: string;
+    title: string;
+    index: number;
+    predecessor_node_id?: string;
+    inputs: any[];
+    process_data?: any;
+    outputs?: any;
+    status: string;
+    error?: string;
+    elapsed_time?: number;
+    execution_metadata: {
+      total_tokens?: number;
+      total_price?: number;
+      currency?: string;
+    };
+    created_at: number;
+  };
+};
+
 export type AnnotationReply = {
   id: string;
   task_id: string;
@@ -156,6 +228,10 @@ export type IOnThought = (though: ThoughtItem) => void;
 export type IOnFile = (file: VisionFile) => void;
 export type IOnMessageEnd = (messageEnd: MessageEnd) => void;
 export type IOnMessageReplace = (messageReplace: MessageReplace) => void;
+export type IOnWorkflowStarted = (workflowStarted: WorkflowStarted) => void;
+export type IOnWorkflowFinished = (workflowFinished: WorkflowFinished) => void;
+export type IOnNodeStarted = (nodeStarted: NodeStarted) => void;
+export type IOnNodeFinished = (nodeFinished: NodeFinished) => void;
 export type IOnAnnotationReply = (messageReplace: AnnotationReply) => void;
 export type IOnCompleted = (hasError?: boolean) => void;
 export type IOnError = (msg: string, code?: string) => void;
@@ -165,12 +241,18 @@ export type IOtherOptions = {
   bodyStringify?: boolean;
   needAllResponseContent?: boolean;
   deleteContentType?: boolean;
-  onData?: IOnData; // for stream
+  onData?: IOnData;
   onThought?: IOnThought;
   onFile?: IOnFile;
   onMessageEnd?: IOnMessageEnd;
   onMessageReplace?: IOnMessageReplace;
+  onWorkflowStarted?: IOnWorkflowStarted;
+  onWorkflowFinished?: IOnWorkflowFinished;
+  onNodeStarted?: IOnNodeStarted;
+  onNodeFinished?: IOnNodeFinished;
   onError?: IOnError;
-  onCompleted?: IOnCompleted; // for stream
+  onCompleted?: IOnCompleted;
   getAbortController?: (abortController: AbortController) => void;
 };
+
+export type DifyFile = VisionFile & { extension?: string };

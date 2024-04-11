@@ -10,7 +10,7 @@ import { SlashCommandBuilder } from "@discordjs/builders";
 import DifyChatClient from "./dify-client/dify-client";
 import * as dotenv from "dotenv";
 import { ChatMessageRequest } from "./dify-client/api.types";
-import { ThoughtItem, VisionFile } from "./dify-client/dify.types";
+import { DifyFile, ThoughtItem, VisionFile } from "./dify-client/dify.types";
 
 dotenv.config();
 const conversationCache = new Map<string, string>();
@@ -139,28 +139,48 @@ class DiscordBot {
           conversation_id: (cacheKey && conversationCache.get(cacheKey)) || "",
           user: this.getUserId(interaction.user.id, interaction.guild?.id),
         },
-        { cacheKey },
+        {
+          cacheKey,
+          handleChatflowAnswer: (chatflowMessages, files) => {
+            if (chatflowMessages.length > 0) {
+              this.sendInteractionAnswer(interaction, chatflowMessages, files);
+            }
+          }
+        },
       );
 
-      for (const [index, m] of messages.entries()) {
-        if (m.length === 0) continue;
-        if (index === 0) {
-          await interaction.editReply({
-            content: m,
-            files: files.map((f) => ({
-              attachment: f.url,
-              name: `generated ${f.type}`,
-            })),
-          });
-        } else {
-          await interaction.followUp({ content: m, ephemeral: true });
-        }
-      }
+      this.sendInteractionAnswer(interaction, messages, files);
     } catch (error) {
       console.error("Error sending message to Dify:", error);
       await interaction.editReply({
         content: "Sorry, something went wrong while generating the answer.",
       });
+    }
+  }
+
+  private sendInteractionAnswer(interaction: CommandInteraction, messages: string[], files?: DifyFile[]) {
+    for (const [index, m] of messages.entries()) {
+      if (m.length === 0) continue;
+
+      const additionalFields = index === 0 ? {
+        files: files?.map((f) => ({
+          attachment: f.url,
+          name: f.extension ? `generated_${f.type}.${f.extension}` : `generated_${f.type}`,
+        }))
+      } : {};
+
+      if (!interaction.replied && index === 0) {
+        interaction.editReply({
+          content: m,
+          ...additionalFields,
+        });
+      } else {
+        interaction.followUp({
+          content: m,
+          ephemeral: true,
+          ...additionalFields,
+        });
+      }
     }
   }
 
@@ -185,23 +205,15 @@ class DiscordBot {
           onPing: async () => {
             await message.channel.sendTyping().catch(console.error);
           },
+          handleChatflowAnswer: (chatflowMessages, files) => {
+            if (chatflowMessages.length > 0) {
+              this.sendChatnswer(message, chatflowMessages, files);
+            }
+          }
         },
       );
-      for (const m of messages) {
-        if (m.length > 0) {
-          await message.reply({
-            content: m,
-            embeds: files
-              .filter((file) => file.type === "image")
-              .map((f) => ({
-                title: `Generated Image (${f.thought?.tool})`,
-                description: `Tool input:\n \`\`\`\n${f.thought?.tool_input}\n\`\`\``,
-                image: { url: f.url },
-                url: f.url,
-              })),
-          });
-        }
-      }
+
+      this.sendChatnswer(message, messages, files);
     } catch (error) {
       console.error("Error sending message to Dify:", error);
       await message.reply(
@@ -210,9 +222,26 @@ class DiscordBot {
     }
   }
 
+  private sendChatnswer(message: Message, messages: string[], files?: DifyFile[]) {
+    for (const [index, m] of messages.entries()) {
+      if (m.length === 0) continue;
+      if (index === 0) {
+        message.reply({
+          content: m,
+          files: files?.map((f) => ({
+            attachment: f.url,
+            name: f.extension ? `generated_${f.type}.${f.extension}` : `generated_${f.type}`,
+          })),
+        });
+      } else {
+        message.reply(m);
+      }
+    }
+  }
+
   private async generateAnswer(
     reqiest: ChatMessageRequest,
-    { cacheKey, onPing }: { cacheKey: string; onPing?: () => void },
+    { cacheKey, onPing, handleChatflowAnswer }: { cacheKey: string; onPing?: () => void, handleChatflowAnswer?: (messages: string[], files?: Array<VisionFile & { thought?: ThoughtItem }>) => void },
   ): Promise<{
     messages: string[];
     files: Array<VisionFile & { thought?: ThoughtItem }>;
@@ -221,25 +250,64 @@ class DiscordBot {
       return Promise.resolve({ messages: [], files: [] });
     return new Promise(async (resolve, reject) => {
       try {
-        let buffer = "";
+        let buffer = { defaultAnswer: '', chatflowAnswer: '' }
         let files: VisionFile[] = [];
         let fileGenerationThought: ThoughtItem[] = [];
+        let bufferType = 'defaultMessage'
         await this.difyClient.streamChatMessage(reqiest, {
           onMessage: async (answer, isFirstMessage, { conversationId }) => {
-            buffer += answer;
+            switch (bufferType) {
+              case 'defaultMessage':
+                buffer.defaultAnswer += answer;
+                break;
+              case 'chatflowAnswer':
+                buffer.chatflowAnswer += answer;
+                break;
+            }
+
             if (cacheKey) {
               conversationCache.set(cacheKey, conversationId);
             }
           },
-          onFile: async (file: VisionFile) => {
+          onFile: async (file: DifyFile) => {
             files.push(file);
           },
           onThought: async (thought) => {
             fileGenerationThought.push(thought);
           },
+          onNodeStarted: async (nodeStarted) => {
+            switch (nodeStarted.data.node_type) {
+              case 'llm':
+                bufferType = 'chatflowAnswer'
+                onPing?.()
+                break;
+              case 'tool':
+                onPing?.()
+                break;
+            }
+          },
+          onNodeFinished: async (nodeFinished) => {
+            switch (nodeFinished.data.node_type) {
+              case 'answer':
+                bufferType = 'defaultMessage'
+                handleChatflowAnswer?.(this.splitMessage(buffer.chatflowAnswer, {
+                  maxLength: this.MAX_MESSAGE_LENGTH,
+                }), files)
+                files = []
+                buffer.chatflowAnswer = ''
+                break;
+              case 'tool':
+                if (nodeFinished.data.title.includes('DALL-E') && nodeFinished.data?.outputs?.files?.length > 0) {
+                  for (let file of nodeFinished.data.outputs.files!) {
+                    files.push(file);
+                  }
+                }
+                break;
+            }
+          },
           onCompleted: () => {
             resolve({
-              messages: this.splitMessage(buffer, {
+              messages: this.splitMessage([buffer.chatflowAnswer, buffer.defaultAnswer].filter(Boolean).join('\n\n'), {
                 maxLength: this.MAX_MESSAGE_LENGTH,
               }),
               files: files.map((file) => ({
@@ -310,7 +378,7 @@ class DiscordBot {
       }
       messages[messages.length - 1] +=
         (messages[messages.length - 1].length > 0 &&
-        messages[messages.length - 1] !== prepend
+          messages[messages.length - 1] !== prepend
           ? char
           : "") + part;
     }
