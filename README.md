@@ -2,12 +2,17 @@
 
 Welcome to the **Dify-Discord-Starter** project! This is a modern and easy-to-use starter template for creating a Discord bot that integrates with the Dify app. Use this template to build your own bot and enable interactive chatting capabilities within your Discord community.
 
+<p align="center">
+  <img src="assets/chatflow_demo.gif" alt="Chatflow Demo GIF" />
+</p>
+
 ## Features 🚀
 
 - **Slash Command Support**: Users can interact with your bot using the `/chat` command directly in Discord.
 - **Integration with Dify**: Seamlessly send and receive messages through the Dify app.
 - **Ephemeral Responses**: Keep conversations private by sending ephemeral messages that only the command user can see.
 - **Simplified Bot Installation**: Easily add your bot to any Discord server with a single command.
+- **Versatile Application**: This starter is designed to work with all dify assistant types, from a basic assistant to an agent chatbot or a complex chatflow.
 
 ## Prerequisites 📋
 
