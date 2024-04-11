@@ -21,10 +21,18 @@ import type {
   IOnMessageReplace,
   IOnThought,
   IOtherOptions,
+  IOnWorkflowStarted,
+  IOnWorkflowFinished,
+  IOnNodeStarted,
+  IOnNodeFinished,
   MessageEnd,
   MessageReplace,
   ThoughtItem,
   VisionFile,
+  WorkflowStarted,
+  WorkflowFinished,
+  NodeStarted,
+  NodeFinished,
 } from "./dify.types";
 
 dotenv.config();
@@ -63,6 +71,10 @@ class DifyChatClient {
       onThought,
       onFile,
       onMessageEnd,
+      onWorkflowStarted,
+      onWorkflowFinished,
+      onNodeStarted,
+      onNodeFinished,
       onMessageReplace,
       onError,
       getAbortController,
@@ -131,6 +143,10 @@ class DifyChatClient {
           onThought,
           onMessageEnd,
           onMessageReplace,
+          onWorkflowStarted,
+          onWorkflowFinished,
+          onNodeStarted,
+          onNodeFinished,
           onFile,
           onPing
         );
@@ -149,6 +165,10 @@ class DifyChatClient {
     onThought?: IOnThought,
     onMessageEnd?: IOnMessageEnd,
     onMessageReplace?: IOnMessageReplace,
+    onWorkflowStarted?: IOnWorkflowStarted,
+    onWorkflowFinished?: IOnWorkflowFinished,
+    onNodeStarted?: IOnNodeStarted,
+    onNodeFinished?: IOnNodeFinished,
     onFile?: IOnFile,
     onPing?: () => void
   ) {
@@ -224,6 +244,14 @@ class DifyChatClient {
               onMessageEnd?.(bufferObj as MessageEnd);
             } else if (bufferObj.event === "message_replace") {
               onMessageReplace?.(bufferObj as MessageReplace);
+            } else if (bufferObj.event === "workflow_started") {
+              onWorkflowStarted?.(bufferObj as WorkflowStarted);
+            } else if (bufferObj.event === "workflow_finished") {
+              onWorkflowFinished?.(bufferObj as WorkflowFinished);
+            } else if (bufferObj.event === "node_started") {
+              onNodeStarted?.(bufferObj as NodeStarted);
+            } else if (bufferObj.event === "node_finished") {
+              onNodeFinished?.(bufferObj as NodeFinished);
             }
           });
           buffer = lines[lines.length - 1];
@@ -252,6 +280,10 @@ class DifyChatClient {
       onFile,
       onPing,
       onThought,
+      onWorkflowStarted,
+      onWorkflowFinished,
+      onNodeStarted,
+      onNodeFinished,
     }: {
       onMessage: (
         text: string,
@@ -262,6 +294,10 @@ class DifyChatClient {
       onFile?: (file: VisionFile) => void;
       onPing?: () => void;
       onThought?: IOnThought;
+      onWorkflowStarted?: IOnWorkflowStarted;
+      onWorkflowFinished?: IOnWorkflowFinished;
+      onNodeStarted?: IOnNodeStarted;
+      onNodeFinished?: IOnNodeFinished;
     }
   ): Promise<void> {
     this.ssePost(
@@ -287,6 +323,10 @@ class DifyChatClient {
         onFile,
         onPing,
         onThought,
+        onWorkflowStarted,
+        onWorkflowFinished,
+        onNodeStarted,
+        onNodeFinished,
       }
     );
   }

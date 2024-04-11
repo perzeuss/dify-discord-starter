@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.4](https://github.com/perzeuss/dify-discord-starter/compare/v0.0.3...v0.0.4) (2024-04-11)
+
+
+### Features
+
+* add support for chatflows ([0a32fca](https://github.com/perzeuss/dify-discord-starter/commit/0a32fcacf4e3a435c0557a633d8341189769252a))
+
 ### [0.0.3](https://github.com/perzeuss/dify-discord-starter/compare/v0.0.2...v0.0.3) (2024-03-11)
 
 
