@@ -4,6 +4,7 @@ Welcome to the **Dify-Discord-Starter** project! This is a modern and easy-to-us
 
 <p align="center">
   <img src="assets/chatflow_demo.gif" alt="Chatflow Demo GIF" />
+  <i>Demo made with the <a href="assets\example_app.yml">Example Dify App</a></i>
 </p>
 
 ## Features 🚀

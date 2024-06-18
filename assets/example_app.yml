@@ -1,0 +1,678 @@
+app:
+  description: Chatflow designed to work with https://github.com/perzeuss/dify-discord-starter
+  icon: "\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: advanced-chat
+  name: Discord Chatflow
+workflow:
+  features:
+    file_upload:
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: llm
+        targetType: answer
+      id: llm-answer
+      source: llm
+      sourceHandle: source
+      target: answer
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: answer
+      id: 1712734163038-1712734158743
+      source: '1712734163038'
+      sourceHandle: source
+      target: '1712734158743'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: answer
+        targetType: tool
+      id: 1712734158743-1712733703182
+      source: '1712734158743'
+      sourceHandle: source
+      target: '1712733703182'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: answer
+      id: 1712733827370-1712733800120
+      source: '1712733827370'
+      sourceHandle: source
+      target: '1712733800120'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: tool
+        targetType: llm
+      id: 1712733703182-1712733827370
+      source: '1712733703182'
+      sourceHandle: source
+      target: '1712733827370'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: start
+        targetType: question-classifier
+      id: 1712733554410-1712733661706
+      source: '1712733554410'
+      sourceHandle: source
+      target: '1712733661706'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: llm
+      id: 1712733714543-1712734163038
+      source: '1712733714543'
+      sourceHandle: source
+      target: '1712734163038'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: variable-assigner
+        targetType: llm
+      id: 1714860969902-1712733714543
+      source: '1714860969902'
+      sourceHandle: source
+      target: '1712733714543'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: variable-assigner
+        targetType: llm
+      id: 1714861249493-llm
+      source: '1714861249493'
+      sourceHandle: source
+      target: llm
+      targetHandle: target
+      type: custom
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: variable-assigner
+      id: 1712733661706-2-1714861249493-target
+      source: '1712733661706'
+      sourceHandle: '2'
+      target: '1714861249493'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: variable-assigner
+      id: 1712733661706-1-1714861249493-target
+      source: '1712733661706'
+      sourceHandle: '1'
+      target: '1714861249493'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: variable-assigner
+      id: 1712733661706-1712742733314-1714861249493-target
+      source: '1712733661706'
+      sourceHandle: '1712742733314'
+      target: '1714861249493'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: variable-assigner
+      id: 1712733661706-1712741727153-1714860969902-target
+      source: '1712733661706'
+      sourceHandle: '1712741727153'
+      target: '1714860969902'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: variable-assigner
+      id: 1712733661706-1712741734921-1714860969902-target
+      source: '1712733661706'
+      sourceHandle: '1712741734921'
+      target: '1714860969902'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: Start
+        type: start
+        variables:
+        - label: username
+          max_length: 48
+          options: []
+          required: true
+          type: text-input
+          variable: username
+        - label: now
+          max_length: 48
+          options: []
+          required: true
+          type: text-input
+          variable: now
+      height: 116
+      id: '1712733554410'
+      position:
+        x: 30
+        y: 352
+      positionAbsolute:
+        x: 30
+        y: 352
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        memory:
+          query_prompt_template: '{{#1712733554410.username#}}:{{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 20
+        model:
+          completion_params:
+            frequency_penalty: 0.3
+            max_tokens: 512
+            presence_penalty: 0.2
+            temperature: 0.5
+            top_p: 0.85
+          mode: chat
+          name: gpt-3.5-turbo
+          provider: openai
+        prompt_template:
+        - id: d387e7c2-e038-448c-a1fd-7c953aeaab8e
+          role: system
+          text: 'You are a Discord chat bot powered by LLM and capable of generating
+            images using DALL-E 3. To create images, users must describe the type
+            of image they want you to generate for them.
+
+            The current UTC time is: {{#1712733554410.now#}}'
+        selected: true
+        title: Generate Chat Response
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: llm
+      position:
+        x: 942
+        y: 352
+      positionAbsolute:
+        x: 942
+        y: 352
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '{{#llm.text#}}'
+        desc: ''
+        selected: false
+        title: Send Chat Response
+        type: answer
+        variables: []
+      height: 106
+      id: answer
+      position:
+        x: 1246
+        y: 352
+      positionAbsolute:
+        x: 1246
+        y: 352
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        classes:
+        - id: '1'
+          name: Fallback
+        - id: '2'
+          name: Text answer
+        - id: '1712741727153'
+          name: Create image
+        - id: '1712741734921'
+          name: Change image
+        - id: '1712742733314'
+          name: User Question
+        desc: ''
+        instruction: 'You are a classification agent in an LLM conversation with a
+          user, while other agents are awaiting your decision.
+
+
+          Your Task: Determine the appropriate next action based on the user''s request:
+
+          - Text Answer: If the user requests image creation but provides no specifics,
+          the next agent should send a text response asking for more details.
+
+          - Create Image: Use this when the user has provided sufficient details for
+          an image they want generated.
+
+          - Change Image: This applies if an image has already been generated for
+          the user, but they request modifications or a new one.
+
+          - User Question: If the user inquires about capabilities, such as if image
+          generation is possible, classify it here.
+
+          - Fallback: Use this for scenarios that don''t fit the categories above.
+
+
+          Respond with the correct classification to facilitate the appropriate agent''s
+          follow-up. If the classification is unclear, opt for the "Feedback" class.
+
+
+          For inquiries about image generation capabilities without specific details
+          on the desired image, classify as "User Question."
+
+
+          Remember: Only select "Create Image" or "Change Image" if the user has provided
+          explicit details about the desired content. In cases where details are lacking,
+          opt for "Text Answer" to prompt further clarification from the user.'
+        instructions: ''
+        memory:
+          window:
+            enabled: true
+            size: 21
+        model:
+          completion_params:
+            frequency_penalty: 0.5
+            max_tokens: 512
+            presence_penalty: 0.5
+            temperature: 0.2
+            top_p: 0.75
+          mode: chat
+          name: gpt-4-turbo-preview
+          provider: openai
+        query_variable_selector:
+        - '1712733554410'
+        - sys.query
+        selected: false
+        title: Question Classifier
+        topics: []
+        type: question-classifier
+      height: 304
+      id: '1712733661706'
+      position:
+        x: 334
+        y: 352
+      positionAbsolute:
+        x: 334
+        y: 352
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        provider_id: dalle
+        provider_name: dalle
+        provider_type: builtin
+        selected: false
+        title: DALL-E 3
+        tool_configurations:
+          n: 1
+          quality: standard
+          size: square
+          style: vivid
+        tool_label: DALL-E 3
+        tool_name: dalle3
+        tool_parameters:
+          prompt:
+            type: mixed
+            value: '{{#1712733714543.text#}}'
+        type: tool
+      height: 168
+      id: '1712733703182'
+      position:
+        x: 1854
+        y: 544
+      positionAbsolute:
+        x: 1854
+        y: 544
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        memory:
+          query_prompt_template: '{{#1712733554410.username#}}: {{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 20
+        model:
+          completion_params:
+            frequency_penalty: 0.3
+            max_tokens: 512
+            presence_penalty: 0.2
+            temperature: 0.5
+            top_p: 0.85
+          mode: chat
+          name: gpt-3.5-turbo
+          provider: openai
+        prompt_template:
+        - id: 6bf561ed-826b-4339-a15f-1f1ae5da1be0
+          role: system
+          text: 'You are a DALL-E prompt generator. Your task is to create prompts
+            for DALL-E to generate images based on user instructions.
+
+
+            Generate a prompt for the user''s instruction: "{{#sys.query#}}"'
+        selected: false
+        title: Generate DALL-E Prompt
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: '1712733714543'
+      position:
+        x: 942
+        y: 544
+      positionAbsolute:
+        x: 942
+        y: 544
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '{{#1712733827370.text#}}'
+        desc: ''
+        selected: false
+        title: Send Final Answer
+        type: answer
+        variables: []
+      height: 106
+      id: '1712733800120'
+      position:
+        x: 2462
+        y: 544
+      positionAbsolute:
+        x: 2462
+        y: 544
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        memory:
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 4
+        model:
+          completion_params:
+            frequency_penalty: 0.5
+            max_tokens: 512
+            presence_penalty: 0.5
+            temperature: 0.2
+            top_p: 0.75
+          mode: chat
+          name: gpt-4-turbo-preview
+          provider: openai
+        prompt_template:
+        - role: system
+          text: 'You are an LLM Agent in a Discord chat. You used a tool to generate
+            an image with DALL-E for the user, with the following prompt: "{{#1712733714543.text#}}".
+            The prompt has been generated by you in the background.
+
+            You already told the user that you will generate the image. Here is what
+            you have sent: "{{#1712734163038.text#}}".
+
+            Your task now is to write a follow-up message to the user in a friendly
+            way, to inform them that the image generation is done. Add a question
+            about how the user likes the image. The generated image will be sent to
+            the user along with your response.'
+        selected: false
+        title: Generate Final Answer
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: '1712733827370'
+      position:
+        x: 2158
+        y: 544
+      positionAbsolute:
+        x: 2158
+        y: 544
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        answer: '{{#1712734163038.text#}}'
+        desc: ''
+        selected: false
+        title: Send Update Message
+        type: answer
+        variables: []
+      height: 106
+      id: '1712734158743'
+      position:
+        x: 1550
+        y: 544
+      positionAbsolute:
+        x: 1550
+        y: 544
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        memory:
+          query_prompt_template: '{{#1712733554410.username#}}: {{#sys.query#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: true
+            size: 10
+        model:
+          completion_params:
+            frequency_penalty: 0.3
+            max_tokens: 512
+            presence_penalty: 0.2
+            temperature: 0.5
+            top_p: 0.85
+          mode: chat
+          name: gpt-3.5-turbo
+          provider: openai
+        prompt_template:
+        - id: 73708d53-7420-4a1f-b98e-ef9f790fafdd
+          role: system
+          text: "Inform the user that the image generation process has started and\
+            \ might take a few seconds.\_"
+        selected: false
+        title: Generate Update Message
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: '1712734163038'
+      position:
+        x: 1246
+        y: 548
+      positionAbsolute:
+        x: 1246
+        y: 548
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        output_type: string
+        selected: false
+        title: 'Merge '
+        type: variable-assigner
+        variables:
+        - - '1714861120815'
+          - output
+        - - '1714861061753'
+          - output
+      height: 139
+      id: '1714860969902'
+      position:
+        x: 638
+        y: 557
+      positionAbsolute:
+        x: 638
+        y: 557
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        output_type: string
+        selected: false
+        title: 'Merge '
+        type: variable-assigner
+        variables:
+        - - '1714861221436'
+          - output
+        - - '1714861225891'
+          - output
+        - - '1714861222650'
+          - output
+      height: 165
+      id: '1714861249493'
+      position:
+        x: 638
+        y: 352
+      positionAbsolute:
+        x: 638
+        y: 352
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        author: Pascal M
+        desc: ''
+        height: 88
+        selected: false
+        showAuthor: false
+        text: '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"We
+          use the Question Classifier to allow a LLM to choose a tool.","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
+        theme: yellow
+        title: ''
+        type: ''
+        width: 240
+      height: 88
+      id: '1718661528737'
+      position:
+        x: 334
+        y: 236.06918681964135
+      positionAbsolute:
+        x: 334
+        y: 236.06918681964135
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-note
+      width: 240
+    - data:
+        author: Pascal M
+        desc: ''
+        height: 125
+        selected: false
+        showAuthor: false
+        text: '{"root":{"children":[{"children":[{"detail":0,"format":0,"mode":"normal","style":"","text":"Use
+          the \"Variable Aggregator\" node to merge multiple paths into one. This
+          might be required if you need to define multiple unser intentions / classes
+          in the Question Classifier for the same action.","type":"text","version":1}],"direction":"ltr","format":"","indent":0,"type":"paragraph","version":1,"textFormat":0}],"direction":"ltr","format":"","indent":0,"type":"root","version":1}}'
+        theme: yellow
+        title: ' (1)'
+        type: ''
+        width: 241
+      height: 125
+      id: '17186707839980'
+      position:
+        x: 638
+        y: 203.162304967769
+      positionAbsolute:
+        x: 638
+        y: 203.162304967769
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom-note
+      width: 241
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.7
