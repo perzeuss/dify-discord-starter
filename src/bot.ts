@@ -1,16 +1,20 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { REST } from "@discordjs/rest";
-import { Routes } from "discord-api-types/v9";
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { REST } from '@discordjs/rest';
+import { Routes } from 'discord-api-types/v9';
 import {
   Client,
   CommandInteraction,
   GatewayIntentBits,
   Message,
-} from "discord.js";
-import * as dotenv from "dotenv";
-import type { ChatMessageRequest } from "./dify-client/api.types";
-import DifyChatClient from "./dify-client/dify-client";
-import { DifyFile, type ThoughtItem, type VisionFile } from "./dify-client/dify.types";
+} from 'discord.js';
+import * as dotenv from 'dotenv';
+import type { ChatMessageRequest } from './dify-client/api.types';
+import DifyChatClient from './dify-client/dify-client';
+import {
+  DifyFile,
+  type ThoughtItem,
+  type VisionFile,
+} from './dify-client/dify.types';
 
 dotenv.config();
 const conversationCache = new Map<string, string>();
@@ -23,11 +27,11 @@ class DiscordBot {
   private readonly MAX_MESSAGE_LENGTH: number;
 
   constructor() {
-    this.TOKEN = process.env.DISCORD_BOT_TOKEN || "";
-    this.HISTORY_MODE = process.env.HISTORY_MODE || "";
+    this.TOKEN = process.env.DISCORD_BOT_TOKEN || '';
+    this.HISTORY_MODE = process.env.HISTORY_MODE || '';
     this.MAX_MESSAGE_LENGTH = Number(process.env.MAX_MESSAGE_LENGTH) || 2000;
     if (!this.TOKEN) {
-      throw new Error("DISCORD_BOT_TOKEN must be provided in the .env file");
+      throw new Error('DISCORD_BOT_TOKEN must be provided in the .env file');
     }
 
     this.client = new Client({
@@ -41,35 +45,35 @@ class DiscordBot {
     });
     this.difyClient = new DifyChatClient();
 
-    this.client.once("ready", () => {
+    this.client.once('ready', () => {
       console.log(
-        "Discord bot is ready!",
-        "Client ID:",
+        'Discord bot is ready!',
+        'Client ID:',
         this.client.user!.id,
-        `\nInstall this bot to your server with this link: https://discord.com/api/oauth2/authorize?client_id=${this.client.user!.id}&permissions=0&scope=bot%20applications.commands `
+        `\nInstall this bot to your server with this link: https://discord.com/api/oauth2/authorize?client_id=${this.client.user!.id}&permissions=0&scope=bot%20applications.commands `,
       );
     });
 
-    this.client.on("messageCreate", async (message) => {
-      if (message.author.bot) return; 
+    this.client.on('messageCreate', async (message) => {
+      if (message.author.bot) return;
 
       if (message.mentions.has(this.client.user!.id)) {
         await this.handleChatMessage(message);
       }
     });
 
-    this.client.on("interactionCreate", async (interaction) => {
+    this.client.on('interactionCreate', async (interaction) => {
       if (!interaction.isCommand()) return;
 
-      if (interaction.commandName === "chat") {
+      if (interaction.commandName === 'chat') {
         await this.handleChatCommand(interaction);
-      } else if (interaction.commandName === "new-conversation") {
+      } else if (interaction.commandName === 'new-conversation') {
         const cacheId =
-          this.HISTORY_MODE && this.HISTORY_MODE === "user"
+          this.HISTORY_MODE && this.HISTORY_MODE === 'user'
             ? interaction.user.id
             : interaction.channelId;
         conversationCache.delete(cacheId);
-        await interaction.reply("New conversation started!");
+        await interaction.reply('New conversation started!');
       }
     });
   }
@@ -81,36 +85,36 @@ class DiscordBot {
   public async installSlashCommand(guildId: string) {
     const commands = [
       new SlashCommandBuilder()
-        .setName("chat")
+        .setName('chat')
         .setDescription(
-          "Chat with the bot in private. No one but you will see this message or the bot response."
+          'Chat with the bot in private. No one but you will see this message or the bot response.',
         )
         .addStringOption((option) =>
           option
-            .setName("message")
-            .setDescription("Your message.")
-            .setRequired(true)
+            .setName('message')
+            .setDescription('Your message.')
+            .setRequired(true),
         )
         .toJSON(),
       new SlashCommandBuilder()
-        .setName("new-conversation")
+        .setName('new-conversation')
         .setDescription(
-          "Start a new conversation with the bot. This will clear the chat history."
+          'Start a new conversation with the bot. This will clear the chat history.',
         )
         .toJSON(),
     ];
 
-    const rest = new REST({ version: "9" }).setToken(this.TOKEN);
+    const rest = new REST({ version: '9' }).setToken(this.TOKEN);
 
     try {
-      console.log("Started refreshing application (/) commands.");
+      console.log('Started refreshing application (/) commands.');
 
       await rest.put(
         Routes.applicationGuildCommands(this.client.user!.id, guildId),
-        { body: commands }
+        { body: commands },
       );
 
-      console.log("Successfully reloaded application (/) commands.");
+      console.log('Successfully reloaded application (/) commands.');
     } catch (error) {
       console.error(error);
     }
@@ -119,10 +123,10 @@ class DiscordBot {
   private async handleChatCommand(interaction: CommandInteraction) {
     await interaction.deferReply({ ephemeral: true });
 
-    const message = interaction.options.get("message", true);
+    const message = interaction.options.get('message', true);
     const cacheKey = this.getCacheKey(
       interaction.user.id,
-      interaction.channel?.id
+      interaction.channel?.id,
     );
 
     try {
@@ -133,8 +137,8 @@ class DiscordBot {
             now: new Date().toUTCString(),
           },
           query: message.value! as string,
-          response_mode: "streaming",
-          conversation_id: (cacheKey && conversationCache.get(cacheKey)) || "",
+          response_mode: 'streaming',
+          conversation_id: (cacheKey && conversationCache.get(cacheKey)) || '',
           user: this.getUserId(interaction.user.id, interaction.guild?.id),
         },
         {
@@ -144,43 +148,53 @@ class DiscordBot {
               this.sendInteractionAnswer(interaction, chatflowMessages, files);
             }
           },
-        }
+        },
       );
 
       this.sendInteractionAnswer(interaction, messages, files);
     } catch (error) {
-      console.error("Error sending message to Dify:", error);
+      console.error('Error sending message to Dify:', error);
       await interaction.editReply({
-        content: "Sorry, something went wrong while generating the answer.",
+        content: 'Sorry, something went wrong while generating the answer.',
       });
     }
   }
 
-  private sendInteractionAnswer(interaction: CommandInteraction, messages: string[], files?: DifyFile[]) {
+  private sendInteractionAnswer(
+    interaction: CommandInteraction,
+    messages: string[],
+    files?: DifyFile[],
+  ) {
     for (const [index, message] of messages.entries()) {
       if (message.length === 0) continue;
 
       const additionalFields =
         index === 0
           ? {
-              files: files?.map((f) => ({
-                attachment: f.url,
-                name: f.extension ? `generated_${f.type}.${f.extension}` : `generated_${f.type}`,
-              })),
-            }
+            files: files?.map((f) => ({
+              attachment: f.url,
+              name: f.extension
+                ? `generated_${f.type}.${f.extension}`
+                : `generated_${f.type}`,
+            })),
+          }
           : {};
 
-      if (!interaction.replied && index === 0) {
-        interaction.editReply({
-          content: message,
-          ...additionalFields,
-        });
-      } else {
-        interaction.followUp({
-          content: message,
-          ephemeral: true,
-          ...additionalFields,
-        });
+      try {
+        if (!interaction.replied && index === 0) {
+          interaction.editReply({
+            content: message,
+            ...additionalFields,
+          });
+        } else {
+          interaction.followUp({
+            content: message,
+            ephemeral: true,
+            ...additionalFields,
+          });
+        }
+      } catch (error) {
+        console.error('Error sending interaction answer:', error);
       }
     }
   }
@@ -196,9 +210,11 @@ class DiscordBot {
             username: message.author.globalName || message.author.username,
             now: new Date().toUTCString(),
           },
-          query: message.content.replace(`<@${this.client.user?.id}>`, "").trim(),
-          response_mode: "streaming",
-          conversation_id: (cacheKey && conversationCache.get(cacheKey)) || "",
+          query: message.content
+            .replace(`<@${this.client.user?.id}>`, '')
+            .trim(),
+          response_mode: 'streaming',
+          conversation_id: (cacheKey && conversationCache.get(cacheKey)) || '',
           user: this.getUserId(message.author.id, message.guild?.id),
         },
         {
@@ -211,17 +227,23 @@ class DiscordBot {
               this.sendChatAnswer(message, chatflowMessages, files);
             }
           },
-        }
+        },
       );
 
       this.sendChatAnswer(message, messages, files);
     } catch (error) {
-      console.error("Error sending message to Dify:", error);
-      await message.reply("Sorry, something went wrong while generating the answer.");
+      console.error('Error sending message to Dify:', error);
+      await message.reply(
+        'Sorry, something went wrong while generating the answer.',
+      );
     }
   }
 
-  private sendChatAnswer(message: Message, messages: string[], files?: DifyFile[]) {
+  private sendChatAnswer(
+    message: Message,
+    messages: string[],
+    files?: DifyFile[],
+  ) {
     for (const [index, m] of messages.entries()) {
       if (m.length === 0) continue;
 
@@ -229,21 +251,38 @@ class DiscordBot {
         content: m,
         files: files?.map((f) => ({
           attachment: f.url,
-          name: f.extension ? `generated_${f.type}.${f.extension}` : `generated_${f.type}`,
+          name: f.extension
+            ? `generated_${f.type}.${f.extension}`
+            : `generated_${f.type}`,
         })),
       };
 
-      if (index === 0) {
-        message.reply(replyOptions);
-      } else {
-        message.reply(m);
+      try {
+        if (index === 0) {
+          message.reply(replyOptions);
+        } else {
+          message.reply(m);
+        }
+      } catch (error) {
+        console.error('Error sending chat answer:', error);
       }
     }
   }
-  
+
   private async generateAnswer(
     reqiest: ChatMessageRequest,
-    { cacheKey, onPing, handleChatflowAnswer }: { cacheKey: string; onPing?: () => void, handleChatflowAnswer?: (messages: string[], files?: Array<VisionFile & { thought?: ThoughtItem }>) => void },
+    {
+      cacheKey,
+      onPing,
+      handleChatflowAnswer,
+    }: {
+      cacheKey: string;
+      onPing?: () => void;
+      handleChatflowAnswer?: (
+        messages: string[],
+        files?: Array<VisionFile & { thought?: ThoughtItem }>,
+      ) => void;
+    },
   ): Promise<{
     messages: string[];
     files: Array<VisionFile & { thought?: ThoughtItem }>;
@@ -252,10 +291,10 @@ class DiscordBot {
       return Promise.resolve({ messages: [], files: [] });
     return new Promise(async (resolve, reject) => {
       try {
-        let buffer = { defaultAnswer: '', chatflowAnswer: '' }
+        let buffer = { defaultAnswer: '', chatflowAnswer: '' };
         let files: VisionFile[] = [];
         let fileGenerationThought: ThoughtItem[] = [];
-        let bufferType = 'defaultMessage'
+        let bufferType = 'defaultMessage';
         await this.difyClient.streamChatMessage(reqiest, {
           onMessage: async (answer, isFirstMessage, { conversationId }) => {
             switch (bufferType) {
@@ -280,26 +319,32 @@ class DiscordBot {
           onNodeStarted: async (nodeStarted) => {
             switch (nodeStarted.data.node_type) {
               case 'llm':
-                bufferType = 'chatflowAnswer'
-                onPing?.()
+                bufferType = 'chatflowAnswer';
+                onPing?.();
                 break;
               case 'tool':
-                onPing?.()
+                onPing?.();
                 break;
             }
           },
           onNodeFinished: async (nodeFinished) => {
             switch (nodeFinished.data.node_type) {
               case 'answer':
-                bufferType = 'defaultMessage'
-                handleChatflowAnswer?.(this.splitMessage(buffer.chatflowAnswer, {
-                  maxLength: this.MAX_MESSAGE_LENGTH,
-                }), files)
-                files = []
-                buffer.chatflowAnswer = ''
+                bufferType = 'defaultMessage';
+                handleChatflowAnswer?.(
+                  this.splitMessage(buffer.chatflowAnswer, {
+                    maxLength: this.MAX_MESSAGE_LENGTH,
+                  }),
+                  files,
+                );
+                files = [];
+                buffer.chatflowAnswer = '';
                 break;
               case 'tool':
-                if (nodeFinished.data.title.includes('DALL-E') && nodeFinished.data?.outputs?.files?.length > 0) {
+                if (
+                  nodeFinished.data.title.includes('DALL-E') &&
+                  nodeFinished.data?.outputs?.files?.length > 0
+                ) {
                   for (let file of nodeFinished.data.outputs.files!) {
                     files.push(file);
                   }
@@ -309,9 +354,14 @@ class DiscordBot {
           },
           onCompleted: () => {
             resolve({
-              messages: this.splitMessage([buffer.chatflowAnswer, buffer.defaultAnswer].filter(Boolean).join('\n\n'), {
-                maxLength: this.MAX_MESSAGE_LENGTH,
-              }),
+              messages: this.splitMessage(
+                [buffer.chatflowAnswer, buffer.defaultAnswer]
+                  .filter(Boolean)
+                  .join('\n\n'),
+                {
+                  maxLength: this.MAX_MESSAGE_LENGTH,
+                },
+              ),
               files: files.map((file) => ({
                 ...file,
                 thought: fileGenerationThought.find(
@@ -330,26 +380,26 @@ class DiscordBot {
 
   private getCacheKey(
     userId: string | undefined,
-    channelId: string | undefined
+    channelId: string | undefined,
   ): string {
     switch (this.HISTORY_MODE) {
-      case "user":
-        return userId || "";
-      case "channel":
-        return channelId || "";
+      case 'user':
+        return userId || '';
+      case 'channel':
+        return channelId || '';
       default:
-        return "";
+        return '';
     }
   }
 
   private getUserId(userId: string | undefined, serverId: string | undefined) {
     switch (this.HISTORY_MODE) {
-      case "user":
-        return userId || "";
-      case "channel":
-        return serverId || "";
+      case 'user':
+        return userId || '';
+      case 'channel':
+        return serverId || '';
       default:
-        return "";
+        return '';
     }
   }
 
@@ -360,19 +410,19 @@ class DiscordBot {
       char?: string;
       prepend?: string;
       append?: string;
-    } = {}
+    } = {},
   ): string[] {
     const {
       maxLength = 2000,
-      char = "\n",
-      prepend = "",
-      append = "",
+      char = '\n',
+      prepend = '',
+      append = '',
     } = options;
     if (message.length <= maxLength) return [message];
     const splitText = message.split(char);
     if (splitText.some((part) => part.length > maxLength))
-      throw new RangeError("SPLIT_MAX_LEN");
-    const messages = [""];
+      throw new RangeError('SPLIT_MAX_LEN');
+    const messages = [''];
     for (let part of splitText) {
       if (messages[messages.length - 1].length + part.length + 1 > maxLength) {
         messages[messages.length - 1] += append;
@@ -382,7 +432,7 @@ class DiscordBot {
         (messages[messages.length - 1].length > 0 &&
           messages[messages.length - 1] !== prepend
           ? char
-          : "") + part;
+          : '') + part;
     }
     return messages;
   }
