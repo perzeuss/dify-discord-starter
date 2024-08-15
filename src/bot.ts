@@ -1,16 +1,16 @@
-import {
-  Client,
-  IntentsBitField,
-  CommandInteraction,
-  type Message,
-} from "discord.js";
+import { SlashCommandBuilder } from "@discordjs/builders";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
-import { SlashCommandBuilder } from "@discordjs/builders";
-import DifyChatClient from "./dify-client/dify-client";
+import {
+  Client,
+  CommandInteraction,
+  GatewayIntentBits,
+  Message,
+} from "discord.js";
 import * as dotenv from "dotenv";
-import { ChatMessageRequest } from "./dify-client/api.types";
-import { DifyFile, ThoughtItem, VisionFile } from "./dify-client/dify.types";
+import type { ChatMessageRequest } from "./dify-client/api.types";
+import DifyChatClient from "./dify-client/dify-client";
+import { DifyFile, type ThoughtItem, type VisionFile } from "./dify-client/dify.types";
 
 dotenv.config();
 const conversationCache = new Map<string, string>();
@@ -32,9 +32,11 @@ class DiscordBot {
 
     this.client = new Client({
       intents: [
-        IntentsBitField.Flags.Guilds,
-        IntentsBitField.Flags.GuildMessages,
-        IntentsBitField.Flags.DirectMessages,
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageTyping,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.MessageContent,
       ],
     });
     this.difyClient = new DifyChatClient();
@@ -44,12 +46,12 @@ class DiscordBot {
         "Discord bot is ready!",
         "Client ID:",
         this.client.user!.id,
-        `\nInstall this bot to your server with this link: https://discord.com/api/oauth2/authorize?client_id=${this.client.user!.id}&permissions=0&scope=bot%20applications.commands `,
+        `\nInstall this bot to your server with this link: https://discord.com/api/oauth2/authorize?client_id=${this.client.user!.id}&permissions=0&scope=bot%20applications.commands `
       );
     });
 
     this.client.on("messageCreate", async (message) => {
-      if (message.author.bot) return;
+      if (message.author.bot) return; 
 
       if (message.mentions.has(this.client.user!.id)) {
         await this.handleChatMessage(message);
@@ -81,24 +83,20 @@ class DiscordBot {
       new SlashCommandBuilder()
         .setName("chat")
         .setDescription(
-          "Chat with the bot in private. No one but you will see this messasge or the bot response.",
+          "Chat with the bot in private. No one but you will see this message or the bot response."
         )
         .addStringOption((option) =>
           option
             .setName("message")
             .setDescription("Your message.")
-            .setRequired(true),
+            .setRequired(true)
         )
         .toJSON(),
       new SlashCommandBuilder()
         .setName("new-conversation")
         .setDescription(
-          "Start a new conversation with the bot. This will clear the chat history.",
+          "Start a new conversation with the bot. This will clear the chat history."
         )
-        // .addStringOption(option =>
-        //     option.setName('summarize')
-        //         .setDescription('Summarize the current conversation history and take it over to the new conversation.')
-        //         .setRequired(true))
         .toJSON(),
     ];
 
@@ -109,7 +107,7 @@ class DiscordBot {
 
       await rest.put(
         Routes.applicationGuildCommands(this.client.user!.id, guildId),
-        { body: commands },
+        { body: commands }
       );
 
       console.log("Successfully reloaded application (/) commands.");
@@ -124,7 +122,7 @@ class DiscordBot {
     const message = interaction.options.get("message", true);
     const cacheKey = this.getCacheKey(
       interaction.user.id,
-      interaction.channel?.id,
+      interaction.channel?.id
     );
 
     try {
@@ -145,8 +143,8 @@ class DiscordBot {
             if (chatflowMessages.length > 0) {
               this.sendInteractionAnswer(interaction, chatflowMessages, files);
             }
-          }
-        },
+          },
+        }
       );
 
       this.sendInteractionAnswer(interaction, messages, files);
@@ -159,24 +157,27 @@ class DiscordBot {
   }
 
   private sendInteractionAnswer(interaction: CommandInteraction, messages: string[], files?: DifyFile[]) {
-    for (const [index, m] of messages.entries()) {
-      if (m.length === 0) continue;
+    for (const [index, message] of messages.entries()) {
+      if (message.length === 0) continue;
 
-      const additionalFields = index === 0 ? {
-        files: files?.map((f) => ({
-          attachment: f.url,
-          name: f.extension ? `generated_${f.type}.${f.extension}` : `generated_${f.type}`,
-        }))
-      } : {};
+      const additionalFields =
+        index === 0
+          ? {
+              files: files?.map((f) => ({
+                attachment: f.url,
+                name: f.extension ? `generated_${f.type}.${f.extension}` : `generated_${f.type}`,
+              })),
+            }
+          : {};
 
       if (!interaction.replied && index === 0) {
         interaction.editReply({
-          content: m,
+          content: message,
           ...additionalFields,
         });
       } else {
         interaction.followUp({
-          content: m,
+          content: message,
           ephemeral: true,
           ...additionalFields,
         });
@@ -195,7 +196,7 @@ class DiscordBot {
             username: message.author.globalName || message.author.username,
             now: new Date().toUTCString(),
           },
-          query: message.content.replace(`<@${this.client.user?.id}>`, ""),
+          query: message.content.replace(`<@${this.client.user?.id}>`, "").trim(),
           response_mode: "streaming",
           conversation_id: (cacheKey && conversationCache.get(cacheKey)) || "",
           user: this.getUserId(message.author.id, message.guild?.id),
@@ -207,38 +208,39 @@ class DiscordBot {
           },
           handleChatflowAnswer: (chatflowMessages, files) => {
             if (chatflowMessages.length > 0) {
-              this.sendChatnswer(message, chatflowMessages, files);
+              this.sendChatAnswer(message, chatflowMessages, files);
             }
-          }
-        },
+          },
+        }
       );
 
-      this.sendChatnswer(message, messages, files);
+      this.sendChatAnswer(message, messages, files);
     } catch (error) {
       console.error("Error sending message to Dify:", error);
-      await message.reply(
-        "Sorry, something went wrong while generating the answer.",
-      );
+      await message.reply("Sorry, something went wrong while generating the answer.");
     }
   }
 
-  private sendChatnswer(message: Message, messages: string[], files?: DifyFile[]) {
+  private sendChatAnswer(message: Message, messages: string[], files?: DifyFile[]) {
     for (const [index, m] of messages.entries()) {
       if (m.length === 0) continue;
+
+      const replyOptions = {
+        content: m,
+        files: files?.map((f) => ({
+          attachment: f.url,
+          name: f.extension ? `generated_${f.type}.${f.extension}` : `generated_${f.type}`,
+        })),
+      };
+
       if (index === 0) {
-        message.reply({
-          content: m,
-          files: files?.map((f) => ({
-            attachment: f.url,
-            name: f.extension ? `generated_${f.type}.${f.extension}` : `generated_${f.type}`,
-          })),
-        });
+        message.reply(replyOptions);
       } else {
         message.reply(m);
       }
     }
   }
-
+  
   private async generateAnswer(
     reqiest: ChatMessageRequest,
     { cacheKey, onPing, handleChatflowAnswer }: { cacheKey: string; onPing?: () => void, handleChatflowAnswer?: (messages: string[], files?: Array<VisionFile & { thought?: ThoughtItem }>) => void },
@@ -328,7 +330,7 @@ class DiscordBot {
 
   private getCacheKey(
     userId: string | undefined,
-    channelId: string | undefined,
+    channelId: string | undefined
   ): string {
     switch (this.HISTORY_MODE) {
       case "user":
@@ -358,7 +360,7 @@ class DiscordBot {
       char?: string;
       prepend?: string;
       append?: string;
-    } = {},
+    } = {}
   ): string[] {
     const {
       maxLength = 2000,
