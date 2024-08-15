@@ -66,6 +66,7 @@ Before you begin, ensure you have the following installed:
    Use the provided link in the console to add your bot to a Discord server.
 
 7. **Install Slash Commands**
+   The bot will try to install the slash command on the server where it was added. If this fails, you can run the install script manually.
    ```sh
    npx ts-node scripts/install.ts <server-id>
    ```

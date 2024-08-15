@@ -54,6 +54,21 @@ class DiscordBot {
       );
     });
 
+    this.client.on('guildCreate', async (guild) => {
+      console.log(`Joined a new guild: ${guild.name} (ID: ${guild.id})`);
+
+      // Install the slash command on guild join
+      try {
+        await this.installSlashCommand(guild.id);
+        console.log(`Slash commands installed for guild: ${guild.id}`);
+      } catch (error) {
+        console.error(
+          `Error installing slash commands for guild ${guild.id}:`,
+          error,
+        );
+      }
+    });
+
     this.client.on('messageCreate', async (message) => {
       if (message.author.bot) return;
 
@@ -171,13 +186,13 @@ class DiscordBot {
       const additionalFields =
         index === 0
           ? {
-            files: files?.map((f) => ({
-              attachment: f.url,
-              name: f.extension
-                ? `generated_${f.type}.${f.extension}`
-                : `generated_${f.type}`,
-            })),
-          }
+              files: files?.map((f) => ({
+                attachment: f.url,
+                name: f.extension
+                  ? `generated_${f.type}.${f.extension}`
+                  : `generated_${f.type}`,
+              })),
+            }
           : {};
 
       try {
@@ -430,7 +445,7 @@ class DiscordBot {
       }
       messages[messages.length - 1] +=
         (messages[messages.length - 1].length > 0 &&
-          messages[messages.length - 1] !== prepend
+        messages[messages.length - 1] !== prepend
           ? char
           : '') + part;
     }
