@@ -1,16 +1,16 @@
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { REST } from "@discordjs/rest";
+import { Routes } from "discord-api-types/v9";
 import {
   ChannelType,
   Client,
-  IntentsBitField,
   CommandInteraction,
+  IntentsBitField,
   type Message,
 } from "discord.js";
-import { REST } from "@discordjs/rest";
-import { Routes } from "discord-api-types/v9";
-import { SlashCommandBuilder } from "@discordjs/builders";
-import DifyChatClient from "./dify-client/dify-client";
 import * as dotenv from "dotenv";
 import { ChatMessageRequest } from "./dify-client/api.types";
+import DifyChatClient from "./dify-client/dify-client";
 import { DifyFile, ThoughtItem, VisionFile } from "./dify-client/dify.types";
 
 dotenv.config();
@@ -22,21 +22,35 @@ class DiscordBot {
   private readonly TOKEN: string;
   private readonly HISTORY_MODE: string;
   private readonly MAX_MESSAGE_LENGTH: number;
+  private readonly MESSAGE_CONTENT_ALLOWED: boolean;
+  private readonly TRIGGER_KEYWORDS: string[];
 
   constructor() {
     this.TOKEN = process.env.DISCORD_BOT_TOKEN || "";
     this.HISTORY_MODE = process.env.HISTORY_MODE || "";
     this.MAX_MESSAGE_LENGTH = Number(process.env.MAX_MESSAGE_LENGTH) || 2000;
+    this.MESSAGE_CONTENT_ALLOWED =
+      String(process.env.MESSAGE_CONTENT_ALLOWED).toLowerCase() === "true" ||
+      false;
+
+    this.TRIGGER_KEYWORDS = this.parseTriggerKeywords();
+
     if (!this.TOKEN) {
       throw new Error("DISCORD_BOT_TOKEN must be provided in the .env file");
     }
 
+    const intents = [
+      IntentsBitField.Flags.Guilds,
+      IntentsBitField.Flags.GuildMessages,
+      IntentsBitField.Flags.DirectMessages,
+    ];
+
+    if (this.MESSAGE_CONTENT_ALLOWED) {
+      intents.push(IntentsBitField.Flags.MessageContent);
+    }
+
     this.client = new Client({
-      intents: [
-        IntentsBitField.Flags.Guilds,
-        IntentsBitField.Flags.GuildMessages,
-        IntentsBitField.Flags.DirectMessages,
-      ],
+      intents,
     });
     this.difyClient = new DifyChatClient();
 
@@ -52,7 +66,14 @@ class DiscordBot {
     this.client.on("messageCreate", async (message) => {
       if (message.author.bot) return;
 
-      if (message.mentions.has(this.client.user!.id)) {
+      const isMentioned = message.mentions.has(this.client.user!);
+      const isKeywordTriggered =
+        this.MESSAGE_CONTENT_ALLOWED &&
+        this.TRIGGER_KEYWORDS.some((keyword: string) =>
+          message.content.toLowerCase().includes(keyword)
+        );
+
+      if (isMentioned || isKeywordTriggered) {
         await this.handleChatMessage(message);
       }
     });
@@ -75,6 +96,22 @@ class DiscordBot {
 
   public start() {
     return this.client.login(this.TOKEN);
+  }
+
+  private parseTriggerKeywords(): string[] {
+    let keywords: string[] = [];
+    const rawKeywords = process.env.TRIGGER_KEYWORDS;
+    if (!rawKeywords) return keywords;
+
+    try {
+      keywords = JSON.parse(rawKeywords);
+    } catch (error) {
+      console.warn(
+        "Invalid JSON in TRIGGER_KEYWORDS. Ignoring this configuration.",
+        error
+      );
+    }
+    return keywords;
   }
 
   public async installSlashCommand(guildId: string) {
