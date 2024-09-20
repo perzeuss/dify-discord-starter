@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.5](https://github.com/perzeuss/dify-discord-starter/compare/v0.0.4...v0.0.5) (2024-09-20)
+
+
+### Features
+
+* add dockerfile ([423f356](https://github.com/perzeuss/dify-discord-starter/commit/423f356a86a5c4cb5def9dbcb43005639699d9f7))
+* add example app DSL file ([63b70dc](https://github.com/perzeuss/dify-discord-starter/commit/63b70dcdb6871f43b8fd05be2884a11d8ffd6aca))
+* add support for message content and keyword trigger ([ae54c80](https://github.com/perzeuss/dify-discord-starter/commit/ae54c80a309644afa845a392893b435be6b128b2))
+
 ### [0.0.4](https://github.com/perzeuss/dify-discord-starter/compare/v0.0.3...v0.0.4) (2024-04-11)
 
 ### Features
