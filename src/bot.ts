@@ -1,4 +1,5 @@
 import {
+  ChannelType,
   Client,
   IntentsBitField,
   CommandInteraction,
@@ -195,7 +196,10 @@ class DiscordBot {
 
   private async handleChatMessage(message: Message) {
     const cacheKey = this.getCacheKey(message.author.id, message.channelId);
-    message.channel.sendTyping().catch(console.error);
+
+    if (message.channel.type !== ChannelType.GroupDM) {
+      message.channel.sendTyping().catch(console.error);
+    }
 
     try {
       const { messages, files } = await this.generateAnswer(
@@ -212,7 +216,9 @@ class DiscordBot {
         {
           cacheKey,
           onPing: async () => {
-            await message.channel.sendTyping().catch(console.error);
+            if (message.channel.type !== ChannelType.GroupDM) {
+              await message.channel.sendTyping().catch(console.error);
+            }
           },
           handleChatflowAnswer: (chatflowMessages, files) => {
             if (chatflowMessages.length > 0) {
