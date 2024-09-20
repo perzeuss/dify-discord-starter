@@ -13,7 +13,7 @@ export type MessageMore = {
 
 export type SubmitAnnotationFunc = (
   messageId: string,
-  content: string,
+  content: string
 ) => Promise<any>;
 
 export type DisplayScene = "web" | "console";
@@ -222,7 +222,7 @@ export type IOnDataMoreInfo = {
 export type IOnData = (
   message: string,
   isFirstMessage: boolean,
-  moreInfo: IOnDataMoreInfo,
+  moreInfo: IOnDataMoreInfo
 ) => void;
 export type IOnThought = (though: ThoughtItem) => void;
 export type IOnFile = (file: VisionFile) => void;

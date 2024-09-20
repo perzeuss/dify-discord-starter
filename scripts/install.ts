@@ -11,7 +11,7 @@ if (!guildId) {
 
 console.log(
   "Please wait while the discord bot gets installed on the discord server with id",
-  guildId,
+  guildId
 );
 
 const bot = new DiscordBot();
@@ -22,8 +22,8 @@ bot
   .then(() => process.exit(0))
   .then(() =>
     console.log(
-      "Installation successful you can now use the bot on your discord server.",
-    ),
+      "Installation successful you can now use the bot on your discord server."
+    )
   )
   .catch((error) => {
     console.error("Error installing commands:", error);

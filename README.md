@@ -86,7 +86,6 @@ Once the bot is added to your server and the slash command is installed, you can
 
 By default the discord bot will pass the name of the user to the assistant, within the dify variable `username` and the current date as UTC string within the dify variable `now`.
 
-
 ## Conversation History
 
 You can set the environment variable `HISTORY_MODE` to enable chat history. Currently the history is stored in memory, if you restart the bot, it will forget the history.

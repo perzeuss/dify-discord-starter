@@ -44,7 +44,7 @@ class DiscordBot {
         "Discord bot is ready!",
         "Client ID:",
         this.client.user!.id,
-        `\nInstall this bot to your server with this link: https://discord.com/api/oauth2/authorize?client_id=${this.client.user!.id}&permissions=0&scope=bot%20applications.commands `,
+        `\nInstall this bot to your server with this link: https://discord.com/api/oauth2/authorize?client_id=${this.client.user!.id}&permissions=0&scope=bot%20applications.commands `
       );
     });
 
@@ -81,19 +81,19 @@ class DiscordBot {
       new SlashCommandBuilder()
         .setName("chat")
         .setDescription(
-          "Chat with the bot in private. No one but you will see this messasge or the bot response.",
+          "Chat with the bot in private. No one but you will see this messasge or the bot response."
         )
         .addStringOption((option) =>
           option
             .setName("message")
             .setDescription("Your message.")
-            .setRequired(true),
+            .setRequired(true)
         )
         .toJSON(),
       new SlashCommandBuilder()
         .setName("new-conversation")
         .setDescription(
-          "Start a new conversation with the bot. This will clear the chat history.",
+          "Start a new conversation with the bot. This will clear the chat history."
         )
         // .addStringOption(option =>
         //     option.setName('summarize')
@@ -109,7 +109,7 @@ class DiscordBot {
 
       await rest.put(
         Routes.applicationGuildCommands(this.client.user!.id, guildId),
-        { body: commands },
+        { body: commands }
       );
 
       console.log("Successfully reloaded application (/) commands.");
@@ -124,7 +124,7 @@ class DiscordBot {
     const message = interaction.options.get("message", true);
     const cacheKey = this.getCacheKey(
       interaction.user.id,
-      interaction.channel?.id,
+      interaction.channel?.id
     );
 
     try {
@@ -145,8 +145,8 @@ class DiscordBot {
             if (chatflowMessages.length > 0) {
               this.sendInteractionAnswer(interaction, chatflowMessages, files);
             }
-          }
-        },
+          },
+        }
       );
 
       this.sendInteractionAnswer(interaction, messages, files);
@@ -158,16 +158,25 @@ class DiscordBot {
     }
   }
 
-  private sendInteractionAnswer(interaction: CommandInteraction, messages: string[], files?: DifyFile[]) {
+  private sendInteractionAnswer(
+    interaction: CommandInteraction,
+    messages: string[],
+    files?: DifyFile[]
+  ) {
     for (const [index, m] of messages.entries()) {
       if (m.length === 0) continue;
 
-      const additionalFields = index === 0 ? {
-        files: files?.map((f) => ({
-          attachment: f.url,
-          name: f.extension ? `generated_${f.type}.${f.extension}` : `generated_${f.type}`,
-        }))
-      } : {};
+      const additionalFields =
+        index === 0
+          ? {
+              files: files?.map((f) => ({
+                attachment: f.url,
+                name: f.extension
+                  ? `generated_${f.type}.${f.extension}`
+                  : `generated_${f.type}`,
+              })),
+            }
+          : {};
 
       if (!interaction.replied && index === 0) {
         interaction.editReply({
@@ -209,20 +218,24 @@ class DiscordBot {
             if (chatflowMessages.length > 0) {
               this.sendChatnswer(message, chatflowMessages, files);
             }
-          }
-        },
+          },
+        }
       );
 
       this.sendChatnswer(message, messages, files);
     } catch (error) {
       console.error("Error sending message to Dify:", error);
       await message.reply(
-        "Sorry, something went wrong while generating the answer.",
+        "Sorry, something went wrong while generating the answer."
       );
     }
   }
 
-  private sendChatnswer(message: Message, messages: string[], files?: DifyFile[]) {
+  private sendChatnswer(
+    message: Message,
+    messages: string[],
+    files?: DifyFile[]
+  ) {
     for (const [index, m] of messages.entries()) {
       if (m.length === 0) continue;
       if (index === 0) {
@@ -230,7 +243,9 @@ class DiscordBot {
           content: m,
           files: files?.map((f) => ({
             attachment: f.url,
-            name: f.extension ? `generated_${f.type}.${f.extension}` : `generated_${f.type}`,
+            name: f.extension
+              ? `generated_${f.type}.${f.extension}`
+              : `generated_${f.type}`,
           })),
         });
       } else {
@@ -241,7 +256,18 @@ class DiscordBot {
 
   private async generateAnswer(
     reqiest: ChatMessageRequest,
-    { cacheKey, onPing, handleChatflowAnswer }: { cacheKey: string; onPing?: () => void, handleChatflowAnswer?: (messages: string[], files?: Array<VisionFile & { thought?: ThoughtItem }>) => void },
+    {
+      cacheKey,
+      onPing,
+      handleChatflowAnswer,
+    }: {
+      cacheKey: string;
+      onPing?: () => void;
+      handleChatflowAnswer?: (
+        messages: string[],
+        files?: Array<VisionFile & { thought?: ThoughtItem }>
+      ) => void;
+    }
   ): Promise<{
     messages: string[];
     files: Array<VisionFile & { thought?: ThoughtItem }>;
@@ -250,17 +276,17 @@ class DiscordBot {
       return Promise.resolve({ messages: [], files: [] });
     return new Promise(async (resolve, reject) => {
       try {
-        let buffer = { defaultAnswer: '', chatflowAnswer: '' }
+        let buffer = { defaultAnswer: "", chatflowAnswer: "" };
         let files: VisionFile[] = [];
         let fileGenerationThought: ThoughtItem[] = [];
-        let bufferType = 'defaultMessage'
+        let bufferType = "defaultMessage";
         await this.difyClient.streamChatMessage(reqiest, {
           onMessage: async (answer, isFirstMessage, { conversationId }) => {
             switch (bufferType) {
-              case 'defaultMessage':
+              case "defaultMessage":
                 buffer.defaultAnswer += answer;
                 break;
-              case 'chatflowAnswer':
+              case "chatflowAnswer":
                 buffer.chatflowAnswer += answer;
                 break;
             }
@@ -277,27 +303,33 @@ class DiscordBot {
           },
           onNodeStarted: async (nodeStarted) => {
             switch (nodeStarted.data.node_type) {
-              case 'llm':
-                bufferType = 'chatflowAnswer'
-                onPing?.()
+              case "llm":
+                bufferType = "chatflowAnswer";
+                onPing?.();
                 break;
-              case 'tool':
-                onPing?.()
+              case "tool":
+                onPing?.();
                 break;
             }
           },
           onNodeFinished: async (nodeFinished) => {
             switch (nodeFinished.data.node_type) {
-              case 'answer':
-                bufferType = 'defaultMessage'
-                handleChatflowAnswer?.(this.splitMessage(buffer.chatflowAnswer, {
-                  maxLength: this.MAX_MESSAGE_LENGTH,
-                }), files)
-                files = []
-                buffer.chatflowAnswer = ''
+              case "answer":
+                bufferType = "defaultMessage";
+                handleChatflowAnswer?.(
+                  this.splitMessage(buffer.chatflowAnswer, {
+                    maxLength: this.MAX_MESSAGE_LENGTH,
+                  }),
+                  files
+                );
+                files = [];
+                buffer.chatflowAnswer = "";
                 break;
-              case 'tool':
-                if (nodeFinished.data.title.includes('DALL-E') && nodeFinished.data?.outputs?.files?.length > 0) {
+              case "tool":
+                if (
+                  nodeFinished.data.title.includes("DALL-E") &&
+                  nodeFinished.data?.outputs?.files?.length > 0
+                ) {
                   for (let file of nodeFinished.data.outputs.files!) {
                     files.push(file);
                   }
@@ -307,13 +339,18 @@ class DiscordBot {
           },
           onCompleted: () => {
             resolve({
-              messages: this.splitMessage([buffer.chatflowAnswer, buffer.defaultAnswer].filter(Boolean).join('\n\n'), {
-                maxLength: this.MAX_MESSAGE_LENGTH,
-              }),
+              messages: this.splitMessage(
+                [buffer.chatflowAnswer, buffer.defaultAnswer]
+                  .filter(Boolean)
+                  .join("\n\n"),
+                {
+                  maxLength: this.MAX_MESSAGE_LENGTH,
+                }
+              ),
               files: files.map((file) => ({
                 ...file,
                 thought: fileGenerationThought.find(
-                  (t) => file.id && t.message_files?.includes(file.id),
+                  (t) => file.id && t.message_files?.includes(file.id)
                 ),
               })) as any,
             });
@@ -328,7 +365,7 @@ class DiscordBot {
 
   private getCacheKey(
     userId: string | undefined,
-    channelId: string | undefined,
+    channelId: string | undefined
   ): string {
     switch (this.HISTORY_MODE) {
       case "user":
@@ -358,7 +395,7 @@ class DiscordBot {
       char?: string;
       prepend?: string;
       append?: string;
-    } = {},
+    } = {}
   ): string[] {
     const {
       maxLength = 2000,
@@ -378,7 +415,7 @@ class DiscordBot {
       }
       messages[messages.length - 1] +=
         (messages[messages.length - 1].length > 0 &&
-          messages[messages.length - 1] !== prepend
+        messages[messages.length - 1] !== prepend
           ? char
           : "") + part;
     }
