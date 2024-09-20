@@ -70,7 +70,7 @@ class DiscordBot {
       const isKeywordTriggered =
         this.MESSAGE_CONTENT_ALLOWED &&
         this.TRIGGER_KEYWORDS.some((keyword: string) =>
-          message.content.toLowerCase().includes(keyword)
+          message.content.toLowerCase().includes(keyword.toLowerCase())
         );
 
       if (isMentioned || isKeywordTriggered) {
