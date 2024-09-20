@@ -103,6 +103,14 @@ Set it to `channel` if you want the bot to enable a history for channels. The as
 
 Hint: If you use this, the userId of messages will no longer be the user but the server id, since dify does store conversations per user - if you share conversations accross users, you cannot pass the userid since dify would still create a unique conversation per user.
 
+## Triggering the bot
+
+There are three ways to trigger the bot:
+
+- application command: The bot will handle the `/chat` command if the application commands have been installed to the server and the user has permissions to use them.
+- mention: The bot will reply if it is mentioned in a message.
+- keywords: The bot will reply if a new message on a text channel contains a one of the configured keywords. The keywords are defined in the `TRIGGER_KEYWORDS` environment variable. This will only work if the bot has permission to read message contents, which must be enabled in the Discord Developer Portal, and the `MESSAGE_CONTENT_ALLOWED` environment variable must be set to `true`. Please read [Message-Content-Privileged-Intent-FAQ](https://support-dev.discord.com/hc/en-us/articles/4404772028055-Message-Content-Privileged-Intent-FAQ) if you want to use this. Use with caution, as this will trigger the bot on every message that the bot is able to read.
+
 ## Contributing 🤝
 
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
