@@ -9,7 +9,7 @@ import {
   type Message,
 } from "discord.js";
 import * as dotenv from "dotenv";
-import { ChatMessageRequest } from "./dify-client/api.types";
+import { File, ChatMessageRequest } from "./dify-client/api.types";
 import DifyChatClient from "./dify-client/dify-client";
 import { DifyFile, ThoughtItem, VisionFile } from "./dify-client/dify.types";
 
