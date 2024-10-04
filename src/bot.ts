@@ -249,6 +249,11 @@ class DiscordBot {
           response_mode: "streaming",
           conversation_id: (cacheKey && conversationCache.get(cacheKey)) || "",
           user: this.getUserId(message.author.id, message.guild?.id),
+          files: message.attachments.filter(atta => atta.contentType?.startsWith("image/")).map((atta): File => ({
+            type: "image",
+            transfer_method: "remote_url",
+            url: atta.url
+          }))
         },
         {
           cacheKey,
