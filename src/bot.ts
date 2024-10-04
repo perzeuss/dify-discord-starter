@@ -9,7 +9,7 @@ import {
   type Message,
 } from "discord.js";
 import * as dotenv from "dotenv";
-import { ChatMessageRequest } from "./dify-client/api.types";
+import { File, ChatMessageRequest } from "./dify-client/api.types";
 import DifyChatClient from "./dify-client/dify-client";
 import { DifyFile, ThoughtItem, VisionFile } from "./dify-client/dify.types";
 
@@ -249,6 +249,11 @@ class DiscordBot {
           response_mode: "streaming",
           conversation_id: (cacheKey && conversationCache.get(cacheKey)) || "",
           user: this.getUserId(message.author.id, message.guild?.id),
+          files: message.attachments.filter(atta => atta.contentType?.startsWith("image/")).map((atta): File => ({
+            type: "image",
+            transfer_method: "remote_url",
+            url: atta.url
+          }))
         },
         {
           cacheKey,
