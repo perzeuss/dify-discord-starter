@@ -244,6 +244,7 @@ class DiscordBot {
         {
           inputs: {
             username: message.author.globalName || message.author.username,
+            channel_id: message.channelId,
             now: new Date().toUTCString(),
           },
           query: message.content.replace(`<@${this.client.user?.id}>`, ""),
