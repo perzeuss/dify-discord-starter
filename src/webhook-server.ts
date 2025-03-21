@@ -13,6 +13,9 @@ export class WebhookServer {
   constructor(bot: DiscordBot) {
     this.bot = bot;
 
+    // Enable trust proxy to ensure rate limiting
+    this.app.set("trust proxy", true);
+
     // Use security middlewares
     this.app.use(helmet());
     const rateLimitWindow = process.env.WEBHOOK_RATE_LIMIT_WINDOW ? parseInt(process.env.WEBHOOK_RATE_LIMIT_WINDOW) : 15 * 60 * 1000;
