@@ -171,6 +171,7 @@ class DiscordBot {
         {
           inputs: {
             username: interaction.user.globalName || interaction.user.username,
+            user_id: interaction.user.id,
             now: new Date().toUTCString(),
           },
           query: message.value! as string,
@@ -244,6 +245,7 @@ class DiscordBot {
         {
           inputs: {
             username: message.author.globalName || message.author.username,
+            user_id: message.author.id,
             channel_id: message.channelId,
             now: new Date().toUTCString(),
           },
