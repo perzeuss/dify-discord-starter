@@ -16,12 +16,17 @@
     "@discordjs/builders": "^1.7.0",
     "@discordjs/rest": "^2.2.0",
     "axios": "^1.6.5",
+    "body-parser": "^1.20.3",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
     "standard-version": "^9.5.0",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
+    "@types/express": "^5.0.1",
     "@types/node": "^20.11.0",
     "nodemon": "^3.0.2",
     "prettier": "3.2.5",

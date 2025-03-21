@@ -6,6 +6,7 @@ import {
   Client,
   CommandInteraction,
   IntentsBitField,
+  TextChannel,
   type Message,
 } from "discord.js";
 import * as dotenv from "dotenv";
@@ -431,7 +432,7 @@ class DiscordBot {
     }
   }
 
-  splitMessage(
+  private splitMessage(
     message: string,
     options: {
       maxLength?: number;
@@ -463,6 +464,22 @@ class DiscordBot {
           : "") + part;
     }
     return messages;
+  }
+
+  public async handleWebhookChatMessage(channelId: string, content: string): Promise<void> {
+    const channel = await this.client.channels.fetch(channelId);
+    if (!channel || !channel.isTextBased()) {
+      throw new Error("Channel not found or is not text-based");
+    }
+
+    try {
+      if (channel instanceof TextChannel) {
+        await channel.send(content);
+      }
+    } catch (error) {
+      console.error("Error sending message to Discord:", error);
+      throw new Error("Internal Server Error");
+    }
   }
 }
 

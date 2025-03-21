@@ -111,6 +111,58 @@ There are three ways to trigger the bot:
 - mention: The bot will reply if it is mentioned in a message.
 - keywords: The bot will reply if a new message on a text channel contains a one of the configured keywords. The keywords are defined in the `TRIGGER_KEYWORDS` environment variable. This will only work if the bot has permission to read message contents, which must be enabled in the Discord Developer Portal, and the `MESSAGE_CONTENT_ALLOWED` environment variable must be set to `true`. Please read [Message-Content-Privileged-Intent-FAQ](https://support-dev.discord.com/hc/en-us/articles/4404772028055-Message-Content-Privileged-Intent-FAQ) if you want to use this. Use with caution, as this will trigger the bot on every message that the bot is able to read.
 
+## Webhook Feature 🌐
+
+The project supports webhooks, allowing you to send messages on behalf of the bot user. This can be useful for integrating external events or notifications into your Discord Bot.
+
+### Setting Up the Webhook Server
+
+1. **Set the API Key**
+
+   Make sure to set the `WEBHOOK_API_KEY` in your `.env` file. This is required to enable the webhook server.
+
+   ```plaintext
+   WEBHOOK_API_KEY="your-webhook-api-key"
+   WEBHOOK_PORT=3000 # Optional, default is 3000
+   ```
+
+2. **Start the Webhook Server**
+
+   The webhook server will automatically start when the bot starts and the `WEBHOOK_API_KEY` is set.
+
+### Using the Webhook Server
+
+To send a message via the webhook server, you need to send a POST request to the endpoint `/webhook/:channelId`. Replace `:channelId` with the ID of the Discord channel where the message should be sent.
+
+#### Example Request
+
+```sh
+curl -X POST http://localhost:3000/webhook/your-channel-id \
+     -H "Content-Type: application/json" \
+     -H "x-api-key: your-webhook-api-key" \
+     -d '{"content": "Hello, this is a webhook message!"}'
+```
+
+### Webhook Rate Limiting
+
+The webhook endpoints are rate limited to prevent abuse. You can configure the rate limit by using the following environment variables:
+
+- `WEBHOOK_RATE_LIMIT_WINDOW`: The time window in milliseconds for which requests are counted. (Default: 900000 ms for 15 minutes)
+- `WEBHOOK_RATE_LIMIT_MAX`: Maximum number of requests allowed per IP within the time window. (Default: 100)
+
+Make sure to update your `.env` file accordingly if you want to adjust these settings.
+
+### Error Handling
+
+The webhook server returns appropriate HTTP status codes to indicate the status of the request:
+
+- `200 OK`: The message was successfully sent.
+- `400 Bad Request`: Invalid message content.
+- `403 Forbidden`: Invalid API key.
+- `500 Internal Server Error`: An error occurred.
+
+This feature allows you to seamlessly integrate external systems into your Discord server and send automated messages.
+
 ## Contributing 🤝
 
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
